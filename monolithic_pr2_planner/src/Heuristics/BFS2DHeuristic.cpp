@@ -197,7 +197,7 @@ void BFS2DHeuristic::getBresenhamCirclePoints(int x0, int y0, int radius, std::v
     std::vector<int> ret_x;
     std::vector<int> ret_y;
     getBresenhamCirclePoints(x0, y0, radius, ret_x, ret_y);
-    for (int i = 0; i < ret_x.size(); ++i)
+    for (size_t i = 0; i < ret_x.size(); ++i)
     {
         points.push_back(std::make_pair(ret_x[i], ret_y[i]));
     }
@@ -210,7 +210,7 @@ void BFS2DHeuristic::getBresenhamLinePoints(int x1, int y1, int x2, int y2, std:
     std::vector<int> pts_x;
     std::vector<int> pts_y;
     getBresenhamLinePoints(x1, y1, x2, y2, pts_x, pts_y);
-    for (int i = 0; i < pts_x.size(); ++i)
+    for (size_t i = 0; i < pts_x.size(); ++i)
     {
         points.push_back(std::make_pair(pts_x[i], pts_y[i]));
     }

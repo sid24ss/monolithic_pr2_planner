@@ -250,7 +250,9 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
  */
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
-    std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
+    vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, 
+                                                                     *m_goal, 
+                                                                     m_mprims.getMotionPrims());
     if(m_param_catalog.m_visualization_params.final_path){
         postprocessor.visualizeFinalPath(final_path);
     }

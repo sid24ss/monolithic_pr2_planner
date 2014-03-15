@@ -39,11 +39,6 @@ namespace monolithic_pr2_planner_node {
                               int solution_cost,
                               size_t solution_size,
                               double total_planning_time);
-            void packageMHAStats(std::vector<std::string>& stat_names,
-                              std::vector<double>& stats,
-                              int solution_cost,
-                              size_t solution_size,
-                              double total_planning_time);
             bool experimentCallback(GetMobileArmPlan::Request &req,
                                     GetMobileArmPlan::Response &res);
 
@@ -60,7 +55,6 @@ namespace monolithic_pr2_planner_node {
             ros::ServiceServer m_plan_service;
             ros::ServiceServer m_experiment_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
-            std::unique_ptr<SBPLPlanner> m_mha_planner;
             ros::Subscriber m_nav_map;
             ros::Publisher m_costmap_pub;
             std::vector<signed char> m_final_map;

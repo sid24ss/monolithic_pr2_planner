@@ -59,7 +59,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
-    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
+    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %lu, transition data : %lu",
         state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
     size_t i = 0;
@@ -75,7 +75,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
-        ROS_DEBUG_NAMED(SEARCH_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
+        ROS_DEBUG_NAMED(SEARCH_LOG, "Shortcutting : %lu %lu; size of final_path %lu", i, j,
             final_path.size());
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
@@ -101,10 +101,10 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                 j++;
             }
             else{
-                ROS_DEBUG_NAMED(SEARCH_LOG, "Collision here; %d %d", i, j);
+                ROS_DEBUG_NAMED(SEARCH_LOG, "Collision here; %lu %lu", i, j);
                 // Check if it is a consecutive state
                 if(i == (j - 1)){
-                    ROS_DEBUG_NAMED(SEARCH_LOG, "Already, i (%d) is j (%d) - 1",
+                    ROS_DEBUG_NAMED(SEARCH_LOG, "Already, i (%lu) is j (%lu) - 1",
                         i, j);
                     int motion_type = transition_states[i].motion_type();
                     bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
@@ -138,7 +138,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
             }
         }
         else{
-            ROS_DEBUG_NAMED(SEARCH_LOG ,"The interpolation function failed for %d %d; Using transition data instead.", i, j);
+            ROS_DEBUG_NAMED(SEARCH_LOG ,"The interpolation function failed for %lu %lu; Using transition data instead.", i, j);
             // Insert till whatever worked till now.
             if( i != j -1){
                 final_path.insert(final_path.end(), interp_states_prev.begin(),

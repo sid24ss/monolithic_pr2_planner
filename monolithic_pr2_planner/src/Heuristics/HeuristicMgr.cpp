@@ -86,7 +86,7 @@ std::vector<Point> sample_points(int radius, int center_x, int center_y,
     }
     int i = sorted_pts.size()/(num_p + 1);
     std::vector<Point> final_points;
-    for (int k = 1; final_points.size() < num_p; ++k)
+    for (size_t k = 1; static_cast<int>(final_points.size()) < num_p; ++k)
     {
         final_points.push_back(sorted_pts[k*i]);
     }
@@ -204,7 +204,7 @@ void HeuristicMgr::update2DHeuristicMaps(const std::vector<signed char>& data){
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         m_heuristics[i]->update2DHeuristicMap(data);
     }
-    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %d", m_heuristics.size());
+    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %lu", m_heuristics.size());
 }
 
 /**
@@ -420,7 +420,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
-    for (int i = 0; i < selected_points.size(); ++i)
+    for (size_t i = 0; i < selected_points.size(); ++i)
     {
         RightContArmState r_arm_state =
         getRightArmIKSol(selected_points[i].first, selected_points[i].second);
