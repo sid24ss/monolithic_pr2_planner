@@ -18,6 +18,7 @@
   <depend package="kdl" />
   <depend package="geometry_msgs" />
   <depend package="sensor_msgs" />
+  <depend package="sbpl" />
   <depend package="arm_navigation_msgs" />
   <depend package="ompl" />
   <rosdep name="yaml-cpp" />

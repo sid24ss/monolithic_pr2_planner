@@ -214,7 +214,7 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
         m_heuristics[i]->setGoal(goal_state);
     }
     // Create additional heuristics for MHA planner
-    initializeMHAHeuristics(m_base_heur_id, 1);
+    //initializeMHAHeuristics(m_base_heur_id, 1);
 }
 
 std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state)

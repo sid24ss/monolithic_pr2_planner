@@ -201,6 +201,9 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
                                  const RobotState& seed_robot_pose,
                                  RobotPosePtr& new_robot_pose,
                                  bool free_angle_search){
+    static double time = 0;
+    static int counter = 0;
+
     ContObjectState obj_state = disc_obj_state.getContObjectState();
 
     KDL::Frame obj_frame;
@@ -226,11 +229,6 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
     l_angles = l_seed;
 
     ik_calls++;
-    struct timeval tv_b;
-    struct timeval tv_a;
-    gettimeofday(&tv_b, NULL);
-    double before = tv_b.tv_usec + (tv_b.tv_sec * 1000000);
-    gettimeofday(&tv_a, NULL);
 
     // decide which arms we need to run IK for
     bool use_right_arm = (m_planning_mode == PlanningModes::RIGHT_ARM ||
@@ -245,12 +243,14 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
         ROS_ERROR("what! not using any arm for IK??");
     }
 
+    double temptime = clock();
     // TODO make this work for the left arm as well
 #ifdef USE_KDL_SOLVER
     SBPLArmModelPtr arm_model = seed_robot_pose.m_right_arm.getArmModel();
     bool ik_success = arm_model->computeFastIK(r_wrist_frame, r_seed, r_angles);
     if (!ik_success){
         if (!arm_model->computeIK(r_wrist_frame, r_seed, r_angles)){
+            time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
             return false;
         }
     }
@@ -270,12 +270,15 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
         }
     }
 #endif
-    double after = tv_a.tv_usec + (tv_a.tv_sec * 1000000);
-    ik_time += after - before;
-
+    
+    time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
     new_robot_pose = make_shared<RobotState>(seed_robot_pose.base_state(),
                                             RightContArmState(r_angles),
                                             LeftContArmState(l_angles));
+    counter++;
+    if (counter % 1000 == 0){
+        ROS_WARN("ik time is %f, counter is %d", time, counter);
+    }
 
     return true;
 }

@@ -7,17 +7,17 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Release)
+set(ROS_BUILD_TYPE RelWithDebInfo)
 
 rosbuild_init()
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
 #add_definitions(-DUSE_IKFAST_SOLVER)
 add_definitions(-DUSE_KDL_SOLVER)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SBPL REQUIRED sbpl)
-include_directories(${SBPL_INCLUDE_DIRS})
-link_directories(${SBPL_LIBRARY_DIRS})
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(SBPL REQUIRED sbpl)
+#include_directories(${SBPL_INCLUDE_DIRS})
+#link_directories(${SBPL_LIBRARY_DIRS})
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -69,7 +69,7 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
 
                                             src/ExperimentFramework/randomStartGoalGenerator.cpp
                                             )
-target_link_libraries(monolithic_pr2_planner ${SBPL_LIBRARIES} bfs3d)
+target_link_libraries(monolithic_pr2_planner bfs3d)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #target_link_libraries(example ${PROJECT_NAME})

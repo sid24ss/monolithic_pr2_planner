@@ -69,8 +69,8 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
 
  
-    body_start[0] = 1.440000;
-    body_start[1] = 1.740000;
+    body_start[0] = 5.0040000;
+    body_start[1] = 4.040000;
     body_start[2] = 0.260000;
     body_start[3] = -M_PI;
 
@@ -106,8 +106,8 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 3.240000;
-    pose.pose.position.y = 2.00000;
+    pose.pose.position.x = 1.540000;
+    pose.pose.position.y = 4.50000;
     pose.pose.position.z = 1.18000;
 
     // pose.pose.position.x = 6.440000;

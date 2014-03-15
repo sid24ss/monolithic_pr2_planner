@@ -9,9 +9,11 @@
 #include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h>
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/PathPostProcessor.h>
+#include <boost/functional/hash.hpp>
 #include <stdexcept>
 #include <vector>
 #include <memory>
+#include <map>
 
 #define NUM_SMHA_HEUR 3
 #define EPS1 25
@@ -22,6 +24,7 @@ namespace monolithic_pr2_planner {
      * Contains everything from managing state IDs to collision space
      * information.
      */
+    typedef std::pair<int, int> Edge;
     class Environment : public DiscreteSpaceInformation {
         public:
             Environment(ros::NodeHandle nh);
@@ -37,6 +40,14 @@ namespace monolithic_pr2_planner {
                 m_cspace_mgr = cspace_mgr;
             }
             inline void setIMHA(bool is_imha){ m_is_imha = is_imha;};
+
+
+            // lazy ARA*
+
+            virtual void GetSuccs(int sourceStateID, vector<int>* succIDs, 
+                          vector<int>* costs, std::vector<bool>* isTrueCost);
+            virtual int GetTrueCost(int parentID, int childID);
+            virtual int EvaluateCost(int parentID, int childID, bool& isTrueCost);
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);
@@ -51,6 +62,9 @@ namespace monolithic_pr2_planner {
             GoalStatePtr m_goal;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
+            boost::hash<Edge> m_hasher;
+            std::map<Edge, MotionPrimitivePtr> m_edges;
+
 
             // MHA stuff
             bool m_is_imha;

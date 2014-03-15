@@ -29,6 +29,8 @@ namespace monolithic_pr2_planner {
 
             void cost(int cost){ m_cost = cost; };
             int cost() const { return m_cost; };
+            std::vector<RobotState> m_robot_interm_steps;
+            std::vector<ContBaseState> m_cont_base_interm_steps;
         private:
             int m_successor_id;
             int m_cost;
@@ -36,8 +38,6 @@ namespace monolithic_pr2_planner {
             // I'm providing two kinds of intermediate steps because I'm not
             // sure which one will be more useful...
             IntermSteps m_graph_interm_steps;
-            std::vector<RobotState> m_robot_interm_steps;
-            std::vector<ContBaseState> m_cont_base_interm_steps;
             int m_motion_type;
     };
 }

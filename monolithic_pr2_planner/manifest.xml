@@ -12,6 +12,7 @@
   <depend package="angles"/>
   <depend package="pviz"/>
   <depend package="bfs3d"/>
+  <depend package="sbpl"/>
   <depend package="ikfast_pr2"/>
   <depend package="nav_msgs"/>
   <depend package="kinematics_msgs"/>

@@ -42,9 +42,12 @@ namespace monolithic_pr2_planner {
             int base_z(){return m_robot_pose.base_state().z(); };
             int base_theta(){return m_robot_pose.base_state().theta(); };
 
+            bool checkSimpleCollisionModel() const { return m_check_simple; } ;
+            void checkSimpleCollisionModel(bool val){ m_check_simple = val; };
         private:
             int m_id;
             RobotState m_robot_pose;
+            bool m_check_simple;
     };
     typedef boost::shared_ptr<GraphState> GraphStatePtr;
 };

@@ -21,14 +21,18 @@ namespace monolithic_pr2_planner {
             static void visualizeFinalPath(std::vector<FullBodyState> path);
             bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);
+            bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
+                                    std::vector<MotionPrimitivePtr> mprims,
+                                    bool& passed_simple_check,
+                                    bool use_simple_check=false);
+            bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
+                                    std::vector<MotionPrimitivePtr> mprims);
         private:
             std::vector<FullBodyState> getFinalPath(const vector<int>& state_ids,
                                             const vector<TransitionData>& transition_states,
                                             GoalState& goal_state);
             std::vector<FullBodyState> shortcutPath(const vector<int>& state_ids, const vector<TransitionData>& transition_states,
                                             GoalState& goal_state);
-            bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
-                                    std::vector<MotionPrimitivePtr> mprims);
             FullBodyState createFBState(const RobotState& robot);
             RobotState createRobotState(const FullBodyState& fb_state);
             ContBaseState createContBaseState(const FullBodyState& state);

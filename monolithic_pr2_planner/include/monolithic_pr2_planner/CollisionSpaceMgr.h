@@ -26,6 +26,7 @@ namespace monolithic_pr2_planner {
             bool isValid(DiscObjectState& obj_state);
             bool isValid(ContBaseState& base, RightContArmState& r_arm, LeftContArmState& l_arm);
             bool isValid(RobotState& robot_pose);
+            bool isValidSimpleCheck(GraphState& graph_state);
             bool isValidSuccessor(const GraphState& successor,
                                   const TransitionData& t_data);
             bool isValidTransitionStates(const TransitionData& t_data);

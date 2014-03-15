@@ -32,10 +32,11 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
                                  goal_state.getSolnState()->id());
     for (size_t i=0; i < soln_path.size()-1; i++){
         TransitionData best_transition;
+        bool blah;
         bool success = findBestTransition(soln_path[i], 
                                           soln_path[i+1], 
                                           best_transition,
-                                          mprims);
+                                          mprims, blah);
         if (success){
             transition_states.push_back(best_transition);
         } else {
@@ -57,7 +58,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
-    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
+    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %lu, transition data : %lu",
         state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
     size_t i = 0;
@@ -73,7 +74,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
-        ROS_DEBUG_NAMED(SEARCH_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
+        ROS_DEBUG_NAMED(SEARCH_LOG, "Shortcutting : %lu %lu; size of final_path %lu", i, j,
             final_path.size());
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
@@ -99,10 +100,10 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                 j++;
             }
             else{
-                ROS_DEBUG_NAMED(SEARCH_LOG, "Collision here; %d %d", i, j);
+                ROS_DEBUG_NAMED(SEARCH_LOG, "Collision here; %lu %lu", i, j);
                 // Check if it is a consecutive state
                 if(i == (j - 1)){
-                    ROS_DEBUG_NAMED(SEARCH_LOG, "Already, i (%d) is j (%d) - 1",
+                    ROS_DEBUG_NAMED(SEARCH_LOG, "Already, i (%lu) is j (%lu) - 1",
                         i, j);
                     int motion_type = transition_states[i].motion_type();
                     bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
@@ -136,7 +137,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
             }
         }
         else{
-            ROS_DEBUG_NAMED(SEARCH_LOG ,"The interpolation function failed for %d %d; Using transition data instead.", i, j);
+            ROS_DEBUG_NAMED(SEARCH_LOG ,"The interpolation function failed for %lu %lu; Using transition data instead.", i, j);
             // Insert till whatever worked till now.
             if( i != j -1){
                 final_path.insert(final_path.end(), interp_states_prev.begin(),
@@ -200,26 +201,109 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
  */
 bool PathPostProcessor::findBestTransition(int start_id, int end_id, 
                                      TransitionData& best_transition,
-                                     vector<MotionPrimitivePtr> mprims){
+                                     vector<MotionPrimitivePtr> mprims,
+                                     bool& valid,
+                                     bool use_simple_check){
+    static double cc_time = 0;
+    static int cc_counts = 0;
     ROS_DEBUG_NAMED(SEARCH_LOG, "searching from %d for successor id %d", 
                                 start_id, end_id);
     GraphStatePtr source_state = m_hash_mgr->getGraphState(start_id);
     GraphStatePtr successor;
     int best_cost = 1000000;
+    best_transition.cost(-1);
+    GraphStatePtr real_next_successor = m_hash_mgr->getGraphState(end_id);
+    for (auto mprim : mprims){
+        TransitionData t_data;
+        //ROS_INFO("mprim cost is %d, type is %d", mprim->cost(), mprim->motion_type());
+        if (!mprim->apply(*source_state, successor, t_data)){
+            //ROS_INFO("couldn't apply mprim");
+            continue;
+        }
+        successor->id(m_hash_mgr->getStateID(successor));
+        //ROS_INFO("mprim succeeded with final id %d", successor->id());
+        bool matchesEndID = successor->id() == end_id;
+        if (!matchesEndID){
+            //ROS_INFO("wtf, ID didn't match the end, successor->id %d end id %d, mprim %x", successor->id(), end_id, mprim.get());
+            //ROS_INFO("source");
+            //source_state->robot_pose().printToInfo(SEARCH_LOG);
+            //ROS_INFO("successor");
+            //successor->robot_pose().printToInfo(SEARCH_LOG);
+            assert(false);
+            continue;
+        }
+
+        // this particular successor leads us to the correct end state
+        if (use_simple_check){
+            double temptime = clock();
+            valid = m_cspace_mgr->isValidSimpleCheck(*successor);
+            cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+            cc_counts++;
+            if (cc_counts % 100 == 0){
+                ROS_WARN("time spent cc %f (simple) %d", cc_time, cc_counts);
+            }
+
+            // doesn't matter if the check is valid or not, we're still going to
+            // need the cost
+            bool isCheaperAction = t_data.cost() < best_cost;
+            if (isCheaperAction){
+                best_cost = t_data.cost();
+                best_transition = t_data;
+                best_transition.successor_id(successor->id());
+            }
+        } else {
+            ROS_WARN("cin");
+            std::cin.get();
+            valid = (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+                     m_cspace_mgr->isValidTransitionStates(t_data));
+            if (valid){
+                bool isCheaperAction = t_data.cost() < best_cost;
+                if (isCheaperAction){
+                    best_cost = t_data.cost();
+                    best_transition = t_data;
+                    best_transition.successor_id(successor->id());
+                }
+            } // else, we don't have to do anything because the cost is default -1
+        }
+    }
+    if (use_simple_check && best_cost == -1){
+        ROS_WARN("didn't find any successor at all?");
+        assert(false);
+    }
+    return (best_cost != -1);
+}
+
+bool PathPostProcessor::findBestTransition(int start_id, int end_id, 
+                                     TransitionData& best_transition,
+                                     vector<MotionPrimitivePtr> mprims){
+    static double cc_time = 0;
+    static int cc_counts = 0;
+    ROS_DEBUG_NAMED(SEARCH_LOG, "searching from %d for successor id %d", 
+                                start_id, end_id);
+    GraphStatePtr source_state = m_hash_mgr->getGraphState(start_id);
+    GraphStatePtr successor;
+    int best_cost = 100000;
+    best_transition.cost(-1);
     GraphStatePtr real_next_successor = m_hash_mgr->getGraphState(end_id);
     for (auto mprim : mprims){
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
+        successor->id(m_hash_mgr->getStateID(successor));
+        bool matchesEndID = successor->id() == end_id;
         
+        double temptime = clock();
         if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
                 m_cspace_mgr->isValidTransitionStates(t_data))){
             continue;
         }
+        cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+        cc_counts++;
+        if (cc_counts % 100 == 0){
+            ROS_WARN("time spent cc (non simple) %f %d", cc_time, cc_counts);
+        }
 
-        successor->id(m_hash_mgr->getStateID(successor));
-        bool matchesEndID = successor->id() == end_id;
         bool isCheaperAction = t_data.cost() < best_cost;
         if (matchesEndID && isCheaperAction){
             best_cost = t_data.cost();
@@ -228,7 +312,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         }
 
     }
-    return (best_cost != 1000000);
+    return (best_cost != -1);
 }
 
 FullBodyState PathPostProcessor::createFBState(const RobotState& robot){

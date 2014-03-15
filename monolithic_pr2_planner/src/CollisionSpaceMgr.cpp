@@ -78,6 +78,12 @@ bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm,
                                     debug_code);
 }
 
+bool CollisionSpaceMgr::isValidSimpleCheck(GraphState& graph_state){
+
+    BodyPose body_pose = graph_state.robot_pose().base_state().getBodyPose();
+    return m_cspace->simpleCheck(body_pose);
+}
+
 /*! \brief Given the transition data from a state expansion, this does a smart
  * collision check on the successor.
  *
@@ -94,6 +100,7 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
     pose.right_arm().getAngles(&r_arm);
     pose.left_arm().getAngles(&l_arm);
     BodyPose body_pose = pose.base_state().getBodyPose();
+
     bool verbose = false;
     double dist;
     int debug;

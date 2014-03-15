@@ -27,6 +27,8 @@ void BaseMotionPrimitive::print() const {
 bool BaseMotionPrimitive::apply(const GraphState& source_state, 
                            GraphStatePtr& successor,
                            TransitionData& t_data){
+    static double time = 0;
+    static int counter = 0;
     // skip irrelevant angles
     if (source_state.robot_pose().base_state().theta() != start_angle()){
         return false;
@@ -45,12 +47,17 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
     t_data.cost(cost());
     vector<RobotState> interm_robot_steps;
     vector<ContBaseState> cont_base_interm_steps;
+    interm_robot_steps.reserve(10);
+    cont_base_interm_steps.reserve(10);
+    static int base_copy_counter = 0;
     // TODO make sure this skips the first and last points in the intermediate
     // steps list - they are repeats of the start and end position
     //ROS_DEBUG_NAMED(MPRIM_LOG, "Creating BaseMotionPrimitive intermediate steps");
+    
+    double temptime = clock();
     for (auto interm_mprim_steps : getIntermSteps()){
-        RobotState robot_state = source_state.robot_pose();
-        ContBaseState interm_base = robot_state.base_state();
+        RobotState robot_state(std::move(source_state.robot_pose()));
+        ContBaseState interm_base(std::move(robot_state.base_state()));
         interm_base.x(interm_base.x() + interm_mprim_steps[GraphStateElement::BASE_X]);
         interm_base.y(interm_base.y() + interm_mprim_steps[GraphStateElement::BASE_Y]);
 
@@ -58,15 +65,23 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
         // represents the absolute angle, not the delta angle.
         interm_base.theta(interm_mprim_steps[GraphStateElement::BASE_THETA]);
         robot_state.base_state(interm_base);
-        interm_robot_steps.push_back(robot_state);
-        cont_base_interm_steps.push_back(interm_base);
-
+        //t_data.m_robot_interm_steps.push_back(std::move(robot_state));
+        //t_data.m_cont_base_interm_steps.push_back(std::move(interm_base));
+        interm_robot_steps.push_back(std::move(robot_state));
+        cont_base_interm_steps.push_back(std::move(interm_base));
+        base_copy_counter++;
     }
-    GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
-    assert(*successor == last_state);
-    t_data.interm_robot_steps(interm_robot_steps);
-    t_data.cont_base_interm_steps(cont_base_interm_steps);
+    time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+    //GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
+    //GraphState last_state(t_data.m_robot_interm_steps.back());
+    //assert(*successor == last_state);
+    t_data.interm_robot_steps(std::move(interm_robot_steps));
+    t_data.cont_base_interm_steps(std::move(cont_base_interm_steps));
     assert(t_data.cont_base_interm_steps().size() == t_data.interm_robot_steps().size());
+    counter++;
+    if (counter % 100 == 0){
+        ROS_WARN("base motion apply time is %f, counter is %d", time, base_copy_counter);
+    }
     return true;
 }
 

@@ -4,10 +4,11 @@
 using namespace monolithic_pr2_planner;
 using namespace boost;
 
-GraphState::GraphState(RobotState robot_pose) : m_robot_pose(robot_pose){ }
+GraphState::GraphState(RobotState robot_pose) : m_robot_pose(robot_pose),
+m_check_simple(true){ }
 
 GraphState::GraphState(DiscObjectState obj_state, RobotState robot_pose):
- m_robot_pose(robot_pose){ }
+ m_robot_pose(robot_pose), m_check_simple(true){ }
 
 bool GraphState::operator==(const GraphState& other){
     return (m_robot_pose.base_state() == other.m_robot_pose.base_state() &&
@@ -24,41 +25,52 @@ bool GraphState::operator!=(const GraphState& other){
  */
 bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     // object state change
-    DiscObjectState obj_state = m_robot_pose.getObjectStateRelBody();
+    static double time = 0;
+    static int counter = 0;
+
+    DiscObjectState obj_state(std::move(m_robot_pose.getObjectStateRelBody()));
     obj_state.x(obj_state.x() + mprim[GraphStateElement::OBJ_X]);
     obj_state.y(obj_state.y() + mprim[GraphStateElement::OBJ_Y]);
     obj_state.z(obj_state.z() + mprim[GraphStateElement::OBJ_Z]);
     obj_state.roll(obj_state.roll() + mprim[GraphStateElement::OBJ_ROLL]);
     obj_state.pitch(obj_state.pitch() + mprim[GraphStateElement::OBJ_PITCH]);
     obj_state.yaw(obj_state.yaw() + mprim[GraphStateElement::OBJ_YAW]);
-    DiscBaseState base_state = m_robot_pose.base_state();
+
 
     // free angle change
-    RightContArmState right_arm = m_robot_pose.right_arm();
+    double temptime = clock();
+    RightContArmState right_arm(std::move(m_robot_pose.right_arm()));
     int r_fa = right_arm.getDiscFreeAngle() + mprim[GraphStateElement::R_FA];
     right_arm.setDiscFreeAngle(r_fa);
-    m_robot_pose.right_arm(right_arm);
+    m_robot_pose.right_arm(std::move(right_arm));
 
-    LeftContArmState left_arm = m_robot_pose.left_arm();
+    LeftContArmState left_arm(std::move(m_robot_pose.left_arm()));
     int l_fa = left_arm.getDiscFreeAngle() + mprim[GraphStateElement::L_FA];
     left_arm.setDiscFreeAngle(l_fa);
-    m_robot_pose.left_arm(left_arm);
+    m_robot_pose.left_arm(std::move(left_arm));
 
     // base change
+    DiscBaseState base_state(std::move(m_robot_pose.base_state()));
     base_state.x(base_state.x() + mprim[GraphStateElement::BASE_X]);
     base_state.y(base_state.y() + mprim[GraphStateElement::BASE_Y]);
     base_state.z(base_state.z() + mprim[GraphStateElement::BASE_Z]);
     base_state.theta(base_state.theta() + mprim[GraphStateElement::BASE_THETA]);
-    m_robot_pose.base_state(base_state);
+    m_robot_pose.base_state(std::move(base_state));
 
     // compute the new pose (runs IK)
     RobotPosePtr new_robot_pose;
-    if (RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose)){
+    time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+    bool ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
+
+
+    if (ik_success){
         m_robot_pose = *new_robot_pose;
-    } else {
-        return false;
     }
-    return true;
+    counter++;
+    if (counter % 1000 == 0){
+        ROS_WARN("outer time is %f, counter is %d", time, counter);
+    }
+    return ik_success;
 }
 
 void GraphState::printToDebug(char* logger) const {

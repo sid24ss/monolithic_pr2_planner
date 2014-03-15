@@ -53,6 +53,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
         switch(goal_id){
             case 0: //Anchor
                 return std::max(values[0], values[1]);
+                //return values[0];
             case 1: // base
                 return values[2];
             case 2: // Base + arm
@@ -73,8 +74,119 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     return std::max(values[0],values[1]);
 }
 
+
+/*
+ * This is a tricky function. we have to know when to run a simple collision
+ * check, when it's a real true cost, and when to inflate. this is the truth
+ * table behind it
+ *
+ *                    (using CC 
+ *                    specified 
+ *                     on left)
+ *                                
+ * using simple CC? | valid CC?  | istruecost?  | cost value? | inflate?
+ *      T               T        |       T              >0          F
+ *      T               F        |       F              >0          T
+ *      F               T        |       T              >0          F
+ *      F               F        |       T              -1          F
+ *
+ */
+
+int Environment::EvaluateCost(int parentID, int childID, bool& isTrueCost){
+    bool USE_RESEARCH =  false;
+    GraphStatePtr child = m_hash_mgr->getGraphState(childID);
+    TransitionData t_data;
+
+    size_t hashKey = m_hasher(Edge(parentID, childID));
+    //ROS_INFO("looking for mprim between %d and %d", parentID, childID);
+    if (m_edges.find(Edge(parentID, childID)) == m_edges.end()){
+        ROS_ERROR("transition hasn't been found??");
+        assert(false);
+    }
+    //ROS_INFO("stored at %lu is %x", hashKey, m_edges[hashKey].get());
+    vector<MotionPrimitivePtr> small_mprims;
+    small_mprims.push_back(m_edges[Edge(parentID, childID)]);
+    //small_mprims.push_back(m_edges[hashKey]);
+
+
+    PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
+    bool valid_cc = false;
+    bool simple_check = child->checkSimpleCollisionModel();
+
+    if (USE_RESEARCH){
+        postprocessor.findBestTransition(parentID, childID, t_data, 
+                                        small_mprims,
+                                         //m_mprims.getMotionPrims(),
+                                         valid_cc,
+                                         simple_check);
+        // huge hack. findbesttransition should work using the motion primitive
+        // that's stored in the hash table. however, for some reason, sometimes
+        // the mtprims don't match up???
+        //if (simple_check && t_data.cost() < 0){
+        //    postprocessor.findBestTransition(parentID, childID, t_data, 
+        //                                     m_mprims.getMotionPrims(),
+        //                                     valid_cc,
+        //                                     simple_check);
+        //}
+
+
+
+        // this should give us the third column in the above table
+        isTrueCost = ((!simple_check && valid_cc) || 
+                      !(simple_check ^ valid_cc));
+
+        // if the simple check failed, we need to run the full check the next time
+        // around
+        //ROS_INFO("simple check %d valid_cc %d cost %d", simple_check, valid_cc, t_data.cost());
+        bool doFullCCNextTime = (simple_check && !valid_cc );
+        if (doFullCCNextTime){
+            child->checkSimpleCollisionModel(false);
+            assert(t_data.cost() > 0);
+            assert(isTrueCost == false);
+        }
+        if (simple_check){
+            assert(t_data.cost() > 0);
+        }
+        if (!simple_check && valid_cc){
+            assert(t_data.cost() > 0);
+        }
+        if (!simple_check && !valid_cc){
+            assert(t_data.cost() == -1);
+        }
+    } else {
+        isTrueCost = true;
+        postprocessor.findBestTransition(parentID, childID, t_data, 
+                                         small_mprims);
+                                         //m_mprims.getMotionPrims());
+    }
+
+    return t_data.cost();
+}
+
+int Environment::GetTrueCost(int parentID, int childID){
+    // currently a hack for getting the cost between the two states
+    PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
+    TransitionData t_data;
+    postprocessor.findBestTransition(parentID, childID, t_data, 
+                                     m_mprims.getMotionPrims());
+    return t_data.cost();
+
+}
+
+void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
+                           vector<int>* costs, std::vector<bool>* isTrueCost){
+    GetSuccs(sourceStateID, succIDs, costs);
+    for (size_t i=0; i < costs->size(); i++){
+        bool val = (*succIDs)[i] == GOAL_STATE;
+        isTrueCost->push_back(val);
+    }
+}
+
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs){
+    static double get_succs_time = 0;
+    static int get_succs_counts = 0;
+
     assert(sourceStateID != GOAL_STATE);
     ROS_DEBUG_NAMED(SEARCH_LOG, 
             "==================Expanding state %d==================", 
@@ -89,41 +201,89 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     if(m_param_catalog.m_visualization_params.expansions){
         source_state->robot_pose().visualize();
+        ContBaseState test = source_state->robot_pose().base_state();
+        double height = .5+test.z();
+        double simple_radius = .7;
+        Visualizer::pviz->visualizeSphere(test.x(), 
+                                          test.y(),
+                                          height, simple_radius, 100, "simple_check", 1);
         usleep(5000);
     }
-    for (auto mprim : m_mprims.getMotionPrims()){
-        ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
-        // mprim->printEndCoord();
+
+    int mprim_id = 0;
+    vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
+    double temptime = clock();
+    for (auto mprim : all_mprims){
+        //ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
+        //mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
+
+
         if (!mprim->apply(*source_state, successor, t_data)){
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
 
-        if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
-            m_cspace_mgr->isValidTransitionStates(t_data)){
-            ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
-            source_state->printToDebug(SEARCH_LOG);
-            m_hash_mgr->save(successor);
-            ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:", 
-                            successor->id());
-            successor->printToDebug(MPRIM_LOG);
 
-            if (m_goal->isSatisfiedBy(successor)){
-                m_goal->storeAsSolnState(successor);
-                ROS_INFO_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
-                    mprim->cost());
-                succIDs->push_back(GOAL_STATE);
-            } else {
-                succIDs->push_back(successor->id());
-            }
-            costs->push_back(mprim->cost());
-            ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
+
+        m_hash_mgr->save(successor);
+
+        if (m_goal->isSatisfiedBy(successor)){
+            m_goal->storeAsSolnState(successor);
+            succIDs->push_back(GOAL_STATE);
         } else {
-            //successor->robot_pose().visualize();
-            ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
+            succIDs->push_back(successor->id());
         }
+        Edge key = Edge(sourceStateID, successor->id());
+        //ROS_INFO("hashed edge between %d %d to %lu", sourceStateID, 
+        //                                             successor->id(), hashKey);
+        //m_edges[hashKey] = mprim;
+        m_edges.insert(map<Edge, MotionPrimitivePtr>::value_type(key, mprim));
+        //if (sourceStateID == 11181 && successor->id() == 11246){
+        //    source_state->robot_pose().printToInfo(SEARCH_LOG);
+        //    successor->robot_pose().printToInfo(SEARCH_LOG);
+        //    ROS_INFO("using mprim %x", mprim.get());
+        //    ROS_INFO("stored is %x", m_edges[key].get());
+        //}
+        //if (m_edges.find(hashKey) == m_edges.end()){ // not found
+        //    ROS_INFO("couldn't find key. creating new one");
+        //    m_edges[hashKey] = mprim_id;
+        //} else if (best_mprim_cost > mprim->cost()){
+        //    m_edges[hashKey] = mprim_id;
+        //}
+
+        costs->push_back(mprim->cost());
+
+        //if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+        //    m_cspace_mgr->isValidTransitionStates(t_data)){
+        //    ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
+        //    source_state->printToDebug(SEARCH_LOG);
+        //    m_hash_mgr->save(successor);
+        //    ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:", 
+        //                    successor->id());
+        //    successor->printToDebug(MPRIM_LOG);
+
+        //    if (m_goal->isSatisfiedBy(successor)){
+        //        m_goal->storeAsSolnState(successor);
+        //        ROS_INFO_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
+        //            mprim->cost());
+        //        succIDs->push_back(GOAL_STATE);
+        //    } else {
+        //        succIDs->push_back(successor->id());
+        //    }
+        //    costs->push_back(mprim->cost());
+        //    ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
+        //} else {
+        //    //successor->robot_pose().visualize();
+        //    ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
+        //}
+        mprim_id++;
+    }
+    get_succs_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+    get_succs_counts++;
+    if (get_succs_counts % 100 == 0){
+        ROS_WARN("time spent expanding %f", get_succs_time);
     }
 }
 
