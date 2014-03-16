@@ -34,22 +34,18 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
         return false;
     }
     successor.reset(new GraphState(source_state));
-    DiscBaseState base_state = successor->robot_pose().base_state();
+    DiscBaseState base_state(std::move(successor->robot_pose().base_state()));
 
     base_state.x(base_state.x() + m_end_coord[GraphStateElement::BASE_X]);
     base_state.y(base_state.y() + m_end_coord[GraphStateElement::BASE_Y]);
     base_state.z(base_state.z() + m_end_coord[GraphStateElement::BASE_Z]);
     base_state.theta(base_state.theta() + m_end_coord[GraphStateElement::BASE_THETA]);
     RobotState new_state(base_state, successor->robot_pose().right_arm(), successor->robot_pose().left_arm());
-    successor->robot_pose(new_state);
+    successor->robot_pose(std::move(new_state));
 
     t_data.motion_type(motion_type());
     t_data.cost(cost());
     vector<RobotState> interm_robot_steps;
-    vector<ContBaseState> cont_base_interm_steps;
-    interm_robot_steps.reserve(10);
-    cont_base_interm_steps.reserve(10);
-    static int base_copy_counter = 0;
     // TODO make sure this skips the first and last points in the intermediate
     // steps list - they are repeats of the start and end position
     //ROS_DEBUG_NAMED(MPRIM_LOG, "Creating BaseMotionPrimitive intermediate steps");
@@ -64,24 +60,12 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
         // we don't add the original theta like the above because BASE_THETA
         // represents the absolute angle, not the delta angle.
         interm_base.theta(interm_mprim_steps[GraphStateElement::BASE_THETA]);
-        robot_state.base_state(interm_base);
-        //t_data.m_robot_interm_steps.push_back(std::move(robot_state));
-        //t_data.m_cont_base_interm_steps.push_back(std::move(interm_base));
+        robot_state.base_state(std::move(interm_base));
         interm_robot_steps.push_back(std::move(robot_state));
-        cont_base_interm_steps.push_back(std::move(interm_base));
-        base_copy_counter++;
     }
-    time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
     //GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
-    //GraphState last_state(t_data.m_robot_interm_steps.back());
     //assert(*successor == last_state);
     t_data.interm_robot_steps(std::move(interm_robot_steps));
-    t_data.cont_base_interm_steps(std::move(cont_base_interm_steps));
-    assert(t_data.cont_base_interm_steps().size() == t_data.interm_robot_steps().size());
-    counter++;
-    if (counter % 100 == 0){
-        ROS_WARN("base motion apply time is %f, counter is %d", time, base_copy_counter);
-    }
     return true;
 }
 

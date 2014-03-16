@@ -207,7 +207,6 @@ void BaseAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_st
     }
 
     vector<RobotState> interm_robot_steps;
-    vector<ContBaseState> cont_base_state_steps;
     ROS_DEBUG_NAMED(MPRIM_LOG, "generated %lu intermediate base AMP motion primitive vectors:",
                                 interp_base_states.size());
     LeftContArmState l_arm = source_state.robot_pose().left_arm();
@@ -216,11 +215,8 @@ void BaseAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_st
         RobotState robot_state(base_step, r_arm, l_arm);
         interm_robot_steps.push_back(robot_state);
         robot_state.printToDebug(MPRIM_LOG);
-        cont_base_state_steps.push_back(base_step);
     }
     t_data.interm_robot_steps(interm_robot_steps);
-    t_data.cont_base_interm_steps(cont_base_state_steps);
-    assert(interm_robot_steps.size() == cont_base_state_steps.size());
 }
 
 

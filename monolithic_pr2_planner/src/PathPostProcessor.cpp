@@ -50,9 +50,11 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
 
 
 
+    ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    temptime = clock();
     std::vector<FullBodyState> final_path = shortcutPath(soln_path,
         transition_states, goal_state);
-    ROS_INFO("Reconstruct took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
 
@@ -112,9 +114,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                         RobotState robot = transition_states[i].interm_robot_steps()[t];
                         FullBodyState state = createFBState(robot);
                         if(isInterpBaseMotion){
-                            assert(transition_states[i].interm_robot_steps().size() == 
-                                   transition_states[i].cont_base_interm_steps().size());
-                            ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[t];
+                            ContBaseState cont_base = transition_states[i].interm_robot_steps()[t].base_state();
                             std::vector<double> base;
                             cont_base.getValues(&base);
                             state.base = base;
@@ -152,9 +152,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                     RobotState robot = transition_states[i].interm_robot_steps()[t];
                     FullBodyState state = createFBState(robot);
                     if(isInterpBaseMotion){
-                        assert(transition_states[i].interm_robot_steps().size() == 
-                               transition_states[i].cont_base_interm_steps().size());
-                        ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[t];
+                        ContBaseState cont_base = transition_states[i].interm_robot_steps()[t].base_state();
                         std::vector<double> base;
                         cont_base.getValues(&base);
                         state.base = base;
@@ -224,12 +222,6 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         //ROS_INFO("mprim succeeded with final id %d", successor->id());
         bool matchesEndID = successor->id() == end_id;
         if (!matchesEndID){
-            //ROS_INFO("wtf, ID didn't match the end, successor->id %d end id %d, mprim %x", successor->id(), end_id, mprim.get());
-            //ROS_INFO("source");
-            //source_state->robot_pose().printToInfo(SEARCH_LOG);
-            //ROS_INFO("successor");
-            //successor->robot_pose().printToInfo(SEARCH_LOG);
-            assert(false);
             continue;
         }
 
@@ -252,8 +244,6 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
                 best_transition.successor_id(successor->id());
             }
         } else {
-            ROS_WARN("cin");
-            std::cin.get();
             valid = (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
                      m_cspace_mgr->isValidTransitionStates(t_data));
             if (valid){
@@ -305,6 +295,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         }
 
         bool isCheaperAction = t_data.cost() < best_cost;
+
         if (matchesEndID && isCheaperAction){
             best_cost = t_data.cost();
             best_transition = t_data;
@@ -355,11 +346,11 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
                                  const vector<TransitionData>& transition_states,
                                  GoalState& goal_state){
     vector<FullBodyState> fb_states;
-    { // throw in the first point
-        GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[0]);
-        fb_states.push_back(createFBState(source_state->robot_pose()));
-    }
     for (size_t i=0; i < transition_states.size(); i++){
+        // throw in the first point
+        GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
+        fb_states.push_back(createFBState(source_state->robot_pose()));
+        
         int motion_type = transition_states[i].motion_type();
         bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
                                    motion_type == MPrim_Types::BASE_ADAPTIVE);
@@ -367,9 +358,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
             RobotState robot = transition_states[i].interm_robot_steps()[j];
             FullBodyState state = createFBState(robot);
             if (isInterpBaseMotion){
-                assert(transition_states[i].interm_robot_steps().size() == 
-                       transition_states[i].cont_base_interm_steps().size());
-                ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[j];
+                ContBaseState cont_base = transition_states[i].interm_robot_steps()[j].base_state();
                 std::vector<double> base;
                 cont_base.getValues(&base);
                 state.base = base;

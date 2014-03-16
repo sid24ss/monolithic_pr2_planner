@@ -139,12 +139,6 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
                            t_data.motion_type() == MPrim_Types::BASE_ADAPTIVE);
     bool onlyArmMotion = (t_data.motion_type() == MPrim_Types::ARM ||
                           t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE);
-    vector<ContBaseState> interp_base_motions;
-    if (onlyBaseMotion){
-        interp_base_motions = t_data.cont_base_interm_steps();
-        assert(interp_base_motions.size() == t_data.interm_robot_steps().size());
-    }
-    int idx = 0;
     for (auto& robot_state : t_data.interm_robot_steps()){
         vector<double> r_arm(7), l_arm(7);
         robot_state.right_arm().getAngles(&r_arm);
@@ -155,19 +149,16 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
     
         // let's check the validity of all intermediate poses
         if (onlyBaseMotion){
-            BodyPose body_pose = interp_base_motions[idx].body_pose();
+            BodyPose body_pose(std::move(robot_state.base_state().getBodyPose()));
             if (!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
                 debug)){
                 return false;
             }
-            // return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
-            //     debug);
         } else if (onlyArmMotion){
             ROS_DEBUG_NAMED(CSPACE_LOG, "skipping the intermediate points for arms because there are none.");
         } else {
             throw std::invalid_argument("not a valid motion primitive type");
         }
-        idx++;
     }
     return true;
 }

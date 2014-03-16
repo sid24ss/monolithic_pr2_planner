@@ -39,7 +39,6 @@ namespace monolithic_pr2_planner {
             inline void setCollisionSpace(CSpaceMgrPtr cspace_mgr){
                 m_cspace_mgr = cspace_mgr;
             }
-            inline void setIMHA(bool is_imha){ m_is_imha = is_imha;};
 
 
             // lazy ARA*
@@ -48,6 +47,8 @@ namespace monolithic_pr2_planner {
                           vector<int>* costs, std::vector<bool>* isTrueCost);
             virtual int GetTrueCost(int parentID, int childID);
             virtual int EvaluateCost(int parentID, int childID, bool& isTrueCost);
+            void reset();
+
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);
@@ -65,9 +66,6 @@ namespace monolithic_pr2_planner {
             boost::hash<Edge> m_hasher;
             std::map<Edge, MotionPrimitivePtr> m_edges;
 
-
-            // MHA stuff
-            bool m_is_imha;
 
         // SBPL interface stuff
         public:

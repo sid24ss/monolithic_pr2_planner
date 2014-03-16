@@ -39,31 +39,15 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
 }
 
-void EnvInterfaces::resetEnvironment(bool is_imha){
-    ROS_INFO("Resetting Environment and rebuilding...");
-    m_env.reset(new Environment(m_nodehandle));
-    // m_collision_space_interface.reset(new
-    //     CollisionSpaceInterface(m_env->getCollisionSpace(),
-    //         m_env->getHeuristicMgr()));
-    m_env->setCollisionSpace(m_collision_space_interface->getCollisionSpace());
-    m_env->getHeuristicMgr()->setCollisionSpaceMgr(m_collision_space_interface->getCollisionSpace());
-    m_collision_space_interface->setHeuristicMgr(m_env->getHeuristicMgr());
-    m_generator.reset(new StartGoalGenerator(m_env->getCollisionSpace()));
-    m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
-    m_prm.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_P));
-    m_rrtstar.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRTSTAR));
-    m_rrtstar_first_sol.reset(new OMPLPR2Planner(m_env->getCollisionSpace(),
-        RRTSTARFIRSTSOL));
-    m_collision_space_interface->update2DHeuristicMaps(m_final_map);
-    m_env->setIMHA(is_imha);
-}
-
-
+/*! \brief grabs parameters from param server
+ */
 void EnvInterfaces::getParams(){
     m_nodehandle.param<string>("reference_frame", m_params.ref_frame, 
                                     string("map"));
 }
 
+/*! \brief advertise the planPath callback
+ */
 void EnvInterfaces::bindPlanPathToEnv(string service_name){
     m_plan_service = m_nodehandle.advertiseService(service_name, 
                                                    &EnvInterfaces::planPathCallback,
@@ -71,6 +55,9 @@ void EnvInterfaces::bindPlanPathToEnv(string service_name){
 }
 
 
+/*! \brief takes in a service call request and runs the planner, spits back
+ * statistics and a plan.
+ */
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res)
 {
@@ -110,17 +97,14 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
-    //resetEnvironment();
+    m_env->reset();
     double total_planning_time = clock();
     bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
     if(!retVal){
         return false;
     }
     bool forward_search = true;    
-    // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
-    //     false));
     m_ara_planner.reset(new LazyARAPlanner(m_env.get(), forward_search));
-    //m_ara_planner->set_initialsolution_eps(search_request->initial_epsilon);
     bool return_first_soln = true;
     //m_ara_planner->set_search_mode(return_first_soln);
     m_ara_planner->set_start(start_id);
@@ -154,6 +138,9 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     return isPlanFound;
 }
 
+/*! \brief fills in two vectors with stat names and values. needs a couple
+ * parameters that can't be retrieved from the planner member variable.
+ */
 void EnvInterfaces::packageStats(vector<string>& stat_names, 
                                  vector<double>& stats,
                                  int solution_cost,
@@ -200,8 +187,13 @@ void EnvInterfaces::bindNavMapToTopic(string topic){
     m_nav_map = m_nodehandle.subscribe(topic, 1, &EnvInterfaces::loadNavMap, this);
 }
 
-void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>&
-    v,
+/*! \brief given a single dimensional vector of numbers that represents a map,
+ * crop it to the appropriate size. new_origin_x and y are for which coordinate
+ * you want to be the origin. probably is going to be 0,0. width and height are
+ * the dimensions that you want the new map to be starting from 0,0. in meters.
+ */
+void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, 
+                              const std::vector<signed char>& v,
                               double new_origin_x, double new_origin_y,
                               double width, double height){
     vector<vector<signed char> > tmp_map(map_info.height);
