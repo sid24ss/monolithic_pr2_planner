@@ -155,7 +155,11 @@ bool MotionPrimitiveFileParser::parseBaseMotionPrimitives(string filename,
         IntermSteps interm_steps;
         ss >> label >> num_interm_steps;
 
-        for (int i=0; i < num_interm_steps; i++){
+        // we have the weird start/end so we avoid sucking in the start and end
+        // points within transition data. we also need getnextline to run before
+        // and after since it's line count sensitive
+        getNextLine(file, ss, line);
+        for (int i=1; i < num_interm_steps-1; i++){
             getNextLine(file, ss, line);
             vector<double> step;
             while (ss >> dvalue){
@@ -168,6 +172,7 @@ bool MotionPrimitiveFileParser::parseBaseMotionPrimitives(string filename,
 
             interm_steps.push_back(g_step);
         }
+        getNextLine(file, ss, line);
         mprim->setIntermSteps(interm_steps);
         prims.push_back(mprim);
         getNextLine(file, ss, line);

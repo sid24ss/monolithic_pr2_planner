@@ -32,41 +32,36 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
         return false;
     }
     successor.reset(new GraphState(source_state));
-    DiscBaseState base_state = successor->robot_pose().base_state();
+    DiscBaseState base_state(std::move(successor->robot_pose().base_state()));
 
     base_state.x(base_state.x() + m_end_coord[GraphStateElement::BASE_X]);
     base_state.y(base_state.y() + m_end_coord[GraphStateElement::BASE_Y]);
     base_state.z(base_state.z() + m_end_coord[GraphStateElement::BASE_Z]);
     base_state.theta(base_state.theta() + m_end_coord[GraphStateElement::BASE_THETA]);
     RobotState new_state(base_state, successor->robot_pose().right_arm(), successor->robot_pose().left_arm());
-    successor->robot_pose(new_state);
+    successor->robot_pose(std::move(new_state));
 
     t_data.motion_type(motion_type());
     t_data.cost(cost());
     vector<RobotState> interm_robot_steps;
-    vector<ContBaseState> cont_base_interm_steps;
     // TODO make sure this skips the first and last points in the intermediate
     // steps list - they are repeats of the start and end position
     //ROS_DEBUG_NAMED(MPRIM_LOG, "Creating BaseMotionPrimitive intermediate steps");
     for (auto interm_mprim_steps : getIntermSteps()){
-        RobotState robot_state = source_state.robot_pose();
-        ContBaseState interm_base = robot_state.base_state();
+        RobotState robot_state(std::move(source_state.robot_pose()));
+        ContBaseState interm_base(std::move(robot_state.base_state()));
         interm_base.x(interm_base.x() + interm_mprim_steps[GraphStateElement::BASE_X]);
         interm_base.y(interm_base.y() + interm_mprim_steps[GraphStateElement::BASE_Y]);
 
         // we don't add the original theta like the above because BASE_THETA
         // represents the absolute angle, not the delta angle.
         interm_base.theta(interm_mprim_steps[GraphStateElement::BASE_THETA]);
-        robot_state.base_state(interm_base);
-        interm_robot_steps.push_back(robot_state);
-        cont_base_interm_steps.push_back(interm_base);
-
+        robot_state.base_state(std::move(interm_base));
+        interm_robot_steps.push_back(std::move(robot_state));
     }
-    GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
-    assert(*successor == last_state);
-    t_data.interm_robot_steps(interm_robot_steps);
-    t_data.cont_base_interm_steps(cont_base_interm_steps);
-    assert(t_data.cont_base_interm_steps().size() == t_data.interm_robot_steps().size());
+    //GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
+    //assert(*successor == last_state);
+    t_data.interm_robot_steps(std::move(interm_robot_steps));
     return true;
 }
 
