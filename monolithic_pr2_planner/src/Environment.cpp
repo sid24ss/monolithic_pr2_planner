@@ -185,19 +185,27 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs){
     static double get_succs_time = 0;
     static int get_succs_counts = 0;
+    double temptime = clock();
 
+    static double mprim_time = 0;
+    static int mprim_counts = 0;
+
+    static double hash_time = 0;
+    static int hash_counts = 0;
+
+    vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
     assert(sourceStateID != GOAL_STATE);
-    ROS_DEBUG_NAMED(SEARCH_LOG, 
-            "==================Expanding state %d==================", 
-                    sourceStateID);
+    //ROS_DEBUG_NAMED(SEARCH_LOG, 
+    //        "==================Expanding state %d==================", 
+    //                sourceStateID);
     succIDs->clear();
-    succIDs->reserve(m_mprims.getMotionPrims().size());
+    succIDs->reserve(all_mprims.size());
     costs->clear();
-    costs->reserve(m_mprims.getMotionPrims().size());
+    costs->reserve(all_mprims.size());
 
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
-    ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
-    source_state->robot_pose().printToDebug(SEARCH_LOG);
+    //ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
+    //source_state->robot_pose().printToDebug(SEARCH_LOG);
     if(m_param_catalog.m_visualization_params.expansions){
         source_state->robot_pose().visualize();
         ContBaseState test = source_state->robot_pose().base_state();
@@ -210,30 +218,42 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     }
 
     int mprim_id = 0;
-    vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
-    double temptime = clock();
     for (auto mprim : all_mprims){
         //ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         //mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
 
+        double temptime_mprim = clock();
 
         if (!mprim->apply(*source_state, successor, t_data)){
-            ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
+            //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
 
+        mprim_time += (clock()-temptime_mprim)/(double)CLOCKS_PER_SEC;
+        mprim_counts++;
+        if (mprim_counts % 10000 == 0){
+            ROS_WARN("mprim time %f", mprim_time);
+        }
 
 
         m_hash_mgr->save(successor);
 
+        double temptime_hash = clock();
         if (m_goal->isSatisfiedBy(successor)){
             m_goal->storeAsSolnState(successor);
             succIDs->push_back(GOAL_STATE);
         } else {
             succIDs->push_back(successor->id());
         }
+        hash_time += (clock()-temptime_hash)/(double)CLOCKS_PER_SEC;
+        hash_counts++;
+        if (hash_counts % 10000 == 0){
+            ROS_WARN("hash time %f counts %d", hash_time, hash_counts);
+        }
+
+
         Edge key = Edge(sourceStateID, successor->id());
         //ROS_INFO("hashed edge between %d %d to %lu", sourceStateID, 
         //                                             successor->id(), hashKey);
@@ -282,7 +302,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     get_succs_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
     get_succs_counts++;
     if (get_succs_counts % 100 == 0){
-        ROS_WARN("time spent expanding %f", get_succs_time);
+        ROS_WARN("time spent expanding %f count %d", get_succs_time, get_succs_counts);
     }
 }
 

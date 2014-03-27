@@ -63,6 +63,7 @@ namespace monolithic_pr2_planner {
             RightContArmState m_right_arm;
             LeftContArmState m_left_arm;
             DiscObjectState m_obj_state; // this is in BODY frame!
+            ContObjectState m_obj_state_rel_map; // this is in BODY frame!
     };
     typedef boost::shared_ptr<RobotState> RobotPosePtr;
 }

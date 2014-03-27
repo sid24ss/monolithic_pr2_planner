@@ -36,6 +36,30 @@ RobotState::RobotState(ContBaseState base_state, RightContArmState r_arm,
     } else {
         m_obj_state = r_arm.getObjectStateRelBody();
     }
+
+    std::vector<double> angles;
+    SBPLArmModelPtr arm_model;
+    KDL::Frame offset;
+    if (left_arm_dominant){
+        m_left_arm.getAngles(&angles);
+        arm_model = m_left_arm.getArmModel();
+        offset = m_left_arm.getObjectOffset().Inverse();
+    } else {
+        m_right_arm.getAngles(&angles);
+        arm_model = m_right_arm.getArmModel();
+        offset = m_right_arm.getObjectOffset().Inverse();
+    }
+
+    // 10 is the link number for the wrist
+    KDL::Frame to_wrist;
+    arm_model->computeFK(angles, m_base_state.body_pose(), 10, &to_wrist);
+    KDL::Frame f = to_wrist * offset;
+
+    double wr,wp,wy;
+    f.M.GetRPY(wr,wp,wy);
+
+    
+    m_obj_state_rel_map = ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
 }
 
 DiscBaseState RobotState::base_state() const{
@@ -212,9 +236,15 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
     return true;
 }
 
-/*! \brief Gets the pose of the object in map frame.
- */
 ContObjectState RobotState::getObjectStateRelMap() const {
+    return m_obj_state_rel_map;
+}
+/*! \brief Gets the pose of the object in map frame.
+ContObjectState RobotState::getObjectStateRelMap() const {
+    static double hash_time = 0;
+    static int hash_counts = 0;
+    double temptime = clock();
+
     std::vector<double> angles;
     SBPLArmModelPtr arm_model;
     KDL::Frame offset;
@@ -238,8 +268,15 @@ ContObjectState RobotState::getObjectStateRelMap() const {
     double wr,wp,wy;
     f.M.GetRPY(wr,wp,wy);
 
+    hash_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
+    hash_counts++;
+    if (hash_counts % 10000 == 0){
+        ROS_WARN("getobjectstate time %f count %d", hash_time, hash_counts);
+    }
+
     return ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
 }
+ */
 
 ContObjectState RobotState::getObjectStateRelMap(ContBaseState base) const {
     std::vector<double> angles;
