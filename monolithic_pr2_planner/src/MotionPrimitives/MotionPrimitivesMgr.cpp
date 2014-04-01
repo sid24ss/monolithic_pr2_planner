@@ -60,17 +60,17 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
 
 void MotionPrimitivesMgr::loadMPrimSet(int planning_mode){
     m_active_mprims.clear();
-    bool is_arm_only = (PlanningModes::RIGHT_ARM || 
-                        PlanningModes::LEFT_ARM || 
-                        PlanningModes::DUAL_ARM);
-    bool is_mobile = (PlanningModes::RIGHT_ARM_MOBILE || 
-                      PlanningModes::LEFT_ARM_MOBILE || 
-                      PlanningModes::DUAL_ARM_MOBILE);
+    bool is_arm_only = (planning_mode == PlanningModes::RIGHT_ARM || 
+                        planning_mode == PlanningModes::LEFT_ARM || 
+                        planning_mode == PlanningModes::DUAL_ARM);
+    bool is_mobile = (planning_mode == PlanningModes::RIGHT_ARM_MOBILE || 
+                      planning_mode == PlanningModes::LEFT_ARM_MOBILE || 
+                      planning_mode == PlanningModes::DUAL_ARM_MOBILE);
     if (planning_mode == PlanningModes::BASE_ONLY){
         loadBaseOnlyMPrims();
-    } else if (planning_mode == is_arm_only){
+    } else if (is_arm_only){
         loadArmOnlyMPrims();
-    } else if (planning_mode == is_mobile){
+    } else if (is_mobile){
         loadAllMPrims();
     } else {
         ROS_ERROR("Invalid planning mode!");
