@@ -287,8 +287,7 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
             uncropped_map.push_back(static_cast<double>(cost_map.getCost(i,j))/costmap_2d::NO_INFORMATION*100);
         }
     }
-    m_costmap_publisher->updateCostmapData(cost_map,
-    m_costmap_ros->getRobotFootprint());
+    m_costmap_publisher->updateCostmapData(cost_map, m_costmap_ros->getRobotFootprint());
 
     // Publish the full costmap
     m_costmap_publisher->publishCostmap();
