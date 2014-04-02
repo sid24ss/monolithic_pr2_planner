@@ -154,7 +154,8 @@ int HeuristicMgr::addEndEffHeur(const int cost_multiplier){
 
 int HeuristicMgr::add2DHeur(const int cost_multiplier, const double radius_m){
     // Initialize the new heuristic
-    AbstractHeuristicPtr new_2d_heur = make_shared<BFS2DHeuristic>();
+    //BFS2DHeuristicPtr new_2d_heur = make_shared<BFS2DHeuristic>();
+    SimpleCCHeuristicPtr new_2d_heur = make_shared<SimpleCCHeuristic>();
     // Set cost multiplier here.
     new_2d_heur->setCostMultiplier(cost_multiplier);
     new_2d_heur->setRadiusAroundGoal(radius_m);

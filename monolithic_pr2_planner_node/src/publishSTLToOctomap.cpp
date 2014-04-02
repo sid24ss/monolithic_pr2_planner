@@ -52,6 +52,7 @@ bool getVoxelsFromMesh(std::string resource,
     return true;
 }
 
+
 void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y, double Z, double dimX, double dimY, double dimZ, bool fill = true){
     // Add a cuboid of size dimX, dimY, dimZ, with the bottom left being the
     // reference point: X, Y, Z
@@ -187,6 +188,16 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
 
 }
 
+void createHallwayScene(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud){
+    pclCloud->points.clear();
+    addCuboid(pclCloud, 2, 2, 0, 5, .05, 1.8, true);
+    addCuboid(pclCloud, 2, 3.6, 0, 5, .05, 1.8, true);
+
+    // blocking walls
+    addCuboid(pclCloud, 2, 3.6, 0, .05, 4, 1.8, true);
+    addCuboid(pclCloud, 2, 0, 0, .05, 2, 1.8, true);
+}
+
 void addStartStateRegionToParamServer(){
     // Sets the start state regions to the param server for experiments.
     // Note: Setting only one start region for now.
@@ -287,6 +298,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
 
     //addRandomObstacles(pclCloud, 2, 5);
     //addStartStateRegionToParamServer();
+    createHallwayScene(pclCloud);
 
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg (*pclCloud, pc);

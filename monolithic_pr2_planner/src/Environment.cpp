@@ -92,16 +92,17 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
  */
 
 int Environment::EvaluateCost(int parentID, int childID, bool& isTrueCost){
-    bool USE_RESEARCH = true;
+    bool USE_RESEARCH = false;
     GraphStatePtr child = m_hash_mgr->getGraphState(childID);
     TransitionData t_data;
 
     size_t hashKey = m_hasher(Edge(parentID, childID));
-    //ROS_INFO("looking for mprim between %d and %d", parentID, childID);
+    ROS_INFO("looking for mprim between %d and %d", parentID, childID);
     if (m_edges.find(Edge(parentID, childID)) == m_edges.end()){
         ROS_ERROR("transition hasn't been found??");
         assert(false);
     }
+
     //ROS_INFO("stored at %lu is %x", hashKey, m_edges[hashKey].get());
     vector<MotionPrimitivePtr> small_mprims;
     small_mprims.push_back(m_edges[Edge(parentID, childID)]);
@@ -154,11 +155,10 @@ int Environment::EvaluateCost(int parentID, int childID, bool& isTrueCost){
         }
     } else {
         isTrueCost = true;
-        postprocessor.findBestTransition(parentID, childID, t_data, 
+        bool found_transition = postprocessor.findBestTransition(parentID, childID, t_data, 
                                          small_mprims);
                                          //m_mprims.getMotionPrims());
     }
-
     return t_data.cost();
 }
 
@@ -226,6 +226,21 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 
         double temptime_mprim = clock();
 
+        //if (mprim->motion_type() == MPrim_Types::ARM){
+        //    successor.reset(new GraphState(*source_state));
+        //    successor->lazyApplyMPrim(mprim->getEndCoord());
+        //    ROS_INFO("source/successor");
+        //    mprim->printEndCoord();
+        //    source_state->printToDebug(SEARCH_LOG);
+        //    successor->printToDebug(SEARCH_LOG);
+        //    ROS_INFO("done");
+        //} else {
+        //    if (!mprim->apply(*source_state, successor, t_data)){
+        //        //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
+        //        continue;
+        //    }
+        //}
+
         if (!mprim->apply(*source_state, successor, t_data)){
             //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
@@ -236,7 +251,6 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         if (mprim_counts % 10000 == 0){
             ROS_WARN("mprim time %f", mprim_time);
         }
-
 
         m_hash_mgr->save(successor);
 
@@ -253,23 +267,23 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
             ROS_WARN("hash time %f counts %d", hash_time, hash_counts);
         }
 
-
         Edge key = Edge(sourceStateID, successor->id());
         //ROS_INFO("hashed edge between %d %d to %lu", sourceStateID, 
         //                                             successor->id(), hashKey);
         //m_edges[hashKey] = mprim;
+
+        if (m_edges.find(key) == m_edges.end()){ // not found
+            //m_edges[key] = mprim_id;
+        } else {
+            ROS_INFO("edge already exists between %d %d", sourceStateID, successor->id());
+            //m_edges[key] = mprim_id;
+        }
         m_edges.insert(map<Edge, MotionPrimitivePtr>::value_type(key, mprim));
         //if (sourceStateID == 11181 && successor->id() == 11246){
         //    source_state->robot_pose().printToInfo(SEARCH_LOG);
         //    successor->robot_pose().printToInfo(SEARCH_LOG);
         //    ROS_INFO("using mprim %x", mprim.get());
         //    ROS_INFO("stored is %x", m_edges[key].get());
-        //}
-        //if (m_edges.find(hashKey) == m_edges.end()){ // not found
-        //    ROS_INFO("couldn't find key. creating new one");
-        //    m_edges[hashKey] = mprim_id;
-        //} else if (best_mprim_cost > mprim->cost()){
-        //    m_edges[hashKey] = mprim_id;
         //}
 
         costs->push_back(mprim->cost());

@@ -45,5 +45,5 @@ namespace monolithic_pr2_planner {
             // ros::Publisher m_circlepub;
 
     };
-    typedef boost::shared_ptr<BFS2DHeuristic> BaseHeuristicPtr;
+    typedef boost::shared_ptr<BFS2DHeuristic> BFS2DHeuristicPtr;
 }

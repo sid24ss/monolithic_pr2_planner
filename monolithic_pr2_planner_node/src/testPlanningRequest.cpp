@@ -69,8 +69,8 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
 
  
-    body_start[0] = 5.0040000;
-    body_start[1] = 4.040000;
+    body_start[0] = 1.0040000;
+    body_start[1] = 1.00000;
     body_start[2] = 0.260000;
     body_start[3] = -M_PI;
 
@@ -106,8 +106,8 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 1.540000;
-    pose.pose.position.y = 4.50000;
+    pose.pose.position.x = 8.0000;
+    pose.pose.position.y = 5.0000;
     pose.pose.position.z = 1.18000;
 
     // pose.pose.position.x = 6.440000;
@@ -139,8 +139,8 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = pose;
-    srv.request.initial_eps = 100;
-    srv.request.final_eps = 100;
+    srv.request.initial_eps = 5;
+    srv.request.final_eps = 5;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .02;
     srv.request.roll_tolerance = .1;

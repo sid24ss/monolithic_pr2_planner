@@ -5,6 +5,6 @@ debug:
         collision_space: info
         kinematics: info
         hashmanager: info
-        search: info
-        motionprimitives: info
+        search: debug
+        motionprimitives: debug
         heuristics: info

@@ -5,10 +5,10 @@ using namespace monolithic_pr2_planner;
 using namespace boost;
 
 GraphState::GraphState(RobotState robot_pose) : m_robot_pose(robot_pose),
-m_check_simple(true){ }
+m_check_simple(true), m_coord(12,0){updateStateFromRobotState(); }
 
 GraphState::GraphState(DiscObjectState obj_state, RobotState robot_pose):
- m_robot_pose(robot_pose), m_check_simple(true){ }
+ m_robot_pose(robot_pose), m_check_simple(true), m_coord(12,0){updateStateFromRobotState(); }
 
 bool GraphState::operator==(const GraphState& other){
     return (m_robot_pose.base_state() == other.m_robot_pose.base_state() &&
@@ -19,6 +19,45 @@ bool GraphState::operator==(const GraphState& other){
 
 bool GraphState::operator!=(const GraphState& other){
     return !(*this == other);
+}
+
+bool GraphState::lazyApplyMPrim(const GraphStateMotion& mprim){
+    m_coord[GraphStateElement::OBJ_X] += mprim[GraphStateElement::OBJ_X];
+    m_coord[GraphStateElement::OBJ_Y] += mprim[GraphStateElement::OBJ_Y];
+    m_coord[GraphStateElement::OBJ_Z] += mprim[GraphStateElement::OBJ_Z];
+    m_coord[GraphStateElement::OBJ_ROLL] += mprim[GraphStateElement::OBJ_ROLL];
+    m_coord[GraphStateElement::OBJ_PITCH] += mprim[GraphStateElement::OBJ_PITCH];
+    m_coord[GraphStateElement::OBJ_YAW] += mprim[GraphStateElement::OBJ_YAW];
+    m_coord[GraphStateElement::R_FA] += mprim[GraphStateElement::R_FA];
+    m_coord[GraphStateElement::L_FA] += mprim[GraphStateElement::L_FA];
+    m_coord[GraphStateElement::BASE_X] += mprim[GraphStateElement::BASE_X];
+    m_coord[GraphStateElement::BASE_Y] += mprim[GraphStateElement::BASE_Y];
+    m_coord[GraphStateElement::BASE_Z] += mprim[GraphStateElement::BASE_Z];
+    m_coord[GraphStateElement::BASE_THETA] += mprim[GraphStateElement::BASE_THETA];
+}
+
+void GraphState::updateStateFromRobotState(){
+    DiscObjectState obj = m_robot_pose.getObjectStateRelBody();
+    m_coord[GraphStateElement::OBJ_X] = obj.x();
+    m_coord[GraphStateElement::OBJ_Y] = obj.y();
+    m_coord[GraphStateElement::OBJ_Z] = obj.z();
+    m_coord[GraphStateElement::OBJ_ROLL] = obj.roll();
+    m_coord[GraphStateElement::OBJ_PITCH] = obj.pitch();
+    m_coord[GraphStateElement::OBJ_YAW] = obj.yaw();
+
+    RightContArmState right_arm(m_robot_pose.right_arm());
+    int r_fa = right_arm.getDiscFreeAngle();
+    m_coord[GraphStateElement::R_FA] = r_fa;
+
+    LeftContArmState left_arm(m_robot_pose.left_arm());
+    int l_fa = left_arm.getDiscFreeAngle();
+    m_coord[GraphStateElement::L_FA] = l_fa;
+
+    DiscBaseState base_state(m_robot_pose.base_state());
+    m_coord[GraphStateElement::BASE_X] = base_state.x();
+    m_coord[GraphStateElement::BASE_Y] = base_state.y();
+    m_coord[GraphStateElement::BASE_Z] = base_state.z();
+    m_coord[GraphStateElement::BASE_THETA] = base_state.theta();
 }
 
 /*! \brief applies a generic mprim vector to this graph state.
@@ -58,18 +97,18 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     m_robot_pose.base_state(std::move(base_state));
 
     // compute the new pose (runs IK)
+    bool ik_success = true;
     RobotPosePtr new_robot_pose;
     time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
-    bool ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
-
+    ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
 
     if (ik_success){
         m_robot_pose = *new_robot_pose;
     }
     counter++;
-    if (counter % 1000 == 0){
-        ROS_WARN("outer time is %f, counter is %d", time, counter);
-    }
+    //if (counter % 1000 == 0){
+    //    ROS_WARN("outer time is %f, counter is %d", time, counter);
+    //}
     return ik_success;
 }
 
@@ -87,18 +126,18 @@ void GraphState::printToDebug(char* logger) const {
                     map_obj_state.yaw());
 
     ROS_DEBUG_NAMED(logger, "\t%d %d %d %d %d %d %d %d %d %d %d %d",
-                    obj_state.x(),
-                    obj_state.y(),
-                    obj_state.z(),
-                    obj_state.roll(),
-                    obj_state.pitch(),
-                    obj_state.yaw(),
-                    m_robot_pose.right_free_angle(),
-                    m_robot_pose.left_free_angle(),
-                    m_robot_pose.base_state().x(),
-                    m_robot_pose.base_state().y(),
-                    m_robot_pose.base_state().z(),
-                    m_robot_pose.base_state().theta());
+                    m_coord[GraphStateElement::OBJ_X],
+                    m_coord[GraphStateElement::OBJ_Y],
+                    m_coord[GraphStateElement::OBJ_Z],
+                    m_coord[GraphStateElement::OBJ_ROLL],
+                    m_coord[GraphStateElement::OBJ_PITCH],
+                    m_coord[GraphStateElement::OBJ_YAW],
+                    m_coord[GraphStateElement::R_FA],
+                    m_coord[GraphStateElement::L_FA],
+                    m_coord[GraphStateElement::BASE_X],
+                    m_coord[GraphStateElement::BASE_Y],
+                    m_coord[GraphStateElement::BASE_Z],
+                    m_coord[GraphStateElement::BASE_THETA]);
 }
 
 void GraphState::printContToDebug(char* logger) const {

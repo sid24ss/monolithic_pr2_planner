@@ -115,8 +115,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     int soln_cost;
 
     ReplanParams params(10);
-    params.initial_eps = 50;
-    params.final_eps = 50;
+    params.initial_eps = req.initial_eps;
+    params.final_eps = req.final_eps;
     params.return_first_solution = true;
 
     bool isPlanFound = m_ara_planner->replan(&soln, params, &soln_cost);
@@ -282,8 +282,7 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
             uncropped_map.push_back(static_cast<double>(cost_map.getCost(i,j))/costmap_2d::NO_INFORMATION*100);
         }
     }
-    m_costmap_publisher->updateCostmapData(cost_map,
-    m_costmap_ros->getRobotFootprint());
+    m_costmap_publisher->updateCostmapData(cost_map, m_costmap_ros->getRobotFootprint());
 
     // Publish the full costmap
     m_costmap_publisher->publishCostmap();

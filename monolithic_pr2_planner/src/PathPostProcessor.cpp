@@ -44,18 +44,19 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
         }
     }
     
-    // vector<FullBodyState> unshortcut_path = getFinalPath(soln_path, 
-    //                                                 transition_states,
-    //                                                 goal_state);
+    vector<FullBodyState> unshortcut_path = getFinalPath(soln_path, 
+                                                    transition_states,
+                                                    goal_state);
 
 
-
-    ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    temptime = clock();
-    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
-        transition_states, goal_state);
-    ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    return final_path;
+    return unshortcut_path;
+    // code for shortcutting. i don't want shortcutting right now.
+    //ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    //temptime = clock();
+    //std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+    //    transition_states, goal_state);
+    //ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    //return final_path;
 }
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
@@ -228,12 +229,13 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         // this particular successor leads us to the correct end state
         if (use_simple_check){
             double temptime = clock();
-            valid = m_cspace_mgr->isValidSimpleCheck(*successor);
+            RobotState pose = successor->robot_pose();
+            valid = m_cspace_mgr->isValidSimpleCheck(pose);
             cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
             cc_counts++;
-            if (cc_counts % 100 == 0){
-                ROS_WARN("time spent cc %f (simple) %d", cc_time, cc_counts);
-            }
+            //if (cc_counts % 100 == 0){
+            //    ROS_WARN("time spent cc %f (simple) %d", cc_time, cc_counts);
+            //}
 
             // doesn't matter if the check is valid or not, we're still going to
             // need the cost
@@ -280,6 +282,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
+        ROS_INFO("mprim type is %d", mprim->motion_type());
         successor->id(m_hash_mgr->getStateID(successor));
         bool matchesEndID = successor->id() == end_id;
         
@@ -291,7 +294,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
         cc_counts++;
         if (cc_counts % 100 == 0){
-            ROS_WARN("time spent cc (non simple) %f %d", cc_time, cc_counts);
+            ROS_WARN("time spent cc %f %d", cc_time, cc_counts);
         }
 
         bool isCheaperAction = t_data.cost() < best_cost;
@@ -303,7 +306,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         }
 
     }
-    return (best_cost != -1);
+    return (best_cost != 100000);
 }
 
 FullBodyState PathPostProcessor::createFBState(const RobotState& robot){

@@ -56,6 +56,7 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/Heuristics/ArmAnglesHeuristic.cpp
                                             src/Heuristics/HeuristicMgr.cpp
                                             src/Heuristics/2Dgridsearch.cpp
+                                            src/Heuristics/SimpleCCHeuristic.cpp
 
                                             src/SearchRequest.cpp
                                             src/Environment.cpp

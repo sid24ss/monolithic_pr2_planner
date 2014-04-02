@@ -78,9 +78,9 @@ bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm,
                                     debug_code);
 }
 
-bool CollisionSpaceMgr::isValidSimpleCheck(GraphState& graph_state){
+bool CollisionSpaceMgr::isValidSimpleCheck(RobotState& robot_state){
 
-    BodyPose body_pose = graph_state.robot_pose().base_state().getBodyPose();
+    BodyPose body_pose = robot_state.base_state().getBodyPose();
     return m_cspace->simpleCheck(body_pose);
 }
 
@@ -95,7 +95,12 @@ bool CollisionSpaceMgr::isValidSimpleCheck(GraphState& graph_state){
  */
 bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
                                          const TransitionData& t_data){
+    // run the simple check first
     RobotState pose = successor.robot_pose();
+    if (isValidSimpleCheck(pose)){
+        return true;
+    }
+
     vector<double> r_arm(7), l_arm(7);
     pose.right_arm().getAngles(&r_arm);
     pose.left_arm().getAngles(&l_arm);
@@ -109,6 +114,8 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
                            t_data.motion_type() == MPrim_Types::BASE_ADAPTIVE);
     bool onlyArmMotion = (t_data.motion_type() == MPrim_Types::ARM ||
                           t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE);
+
+
     if (onlyBaseMotion){
         return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
                                          debug);
