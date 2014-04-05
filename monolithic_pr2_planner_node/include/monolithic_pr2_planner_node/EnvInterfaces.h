@@ -41,6 +41,7 @@ namespace monolithic_pr2_planner_node {
                               double total_planning_time);
             bool experimentCallback(GetMobileArmPlan::Request &req,
                                     GetMobileArmPlan::Response &res);
+            void startOMPLPlanners();
 
         private:
             void loadNavMap(const nav_msgs::OccupancyGridPtr& map);
