@@ -22,9 +22,10 @@ namespace monolithic_pr2_planner {
 
             bool applyMPrim(const GraphStateMotion& mprim);
 
+            void printToInfo(char* logger) const;
             void printToDebug(char* logger) const ;
             void printContToDebug(char* logger) const ;
-            std::vector<int> getCoord();
+            std::vector<int> getCoords() { return m_coord; };
 
             DiscObjectState getObjectStateRelMap() const;
             DiscObjectState getObjectStateRelBody() const;
@@ -42,6 +43,7 @@ namespace monolithic_pr2_planner {
             int base_z(){return m_coord[GraphStateElement::BASE_Z]; };
             int base_theta(){return m_coord[GraphStateElement::BASE_THETA]; };
 
+            DiscObjectState getObjectStateRelMapFromState() ;
 
             //int obj_x(){ return m_robot_pose.getObjectStateRelBody().x(); };
             //int obj_y(){ return m_robot_pose.getObjectStateRelBody().y(); };
@@ -60,7 +62,7 @@ namespace monolithic_pr2_planner {
             void checkSimpleCollisionModel(bool val){ m_check_simple = val; };
 
             void updateStateFromRobotState();
-            bool lazyApplyMPrim(const GraphStateMotion& mprim);
+            void lazyApplyMPrim(const GraphStateMotion& mprim);
         private:
             int m_id;
             RobotState m_robot_pose;

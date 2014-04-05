@@ -18,7 +18,6 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     if (dist(source_state.getObjectStateRelMap(), goal) > 2){
         return false;
     }
-
     DiscBaseState base_state = source_state.robot_pose().base_state();
 
     // take the discrete orientation (theta) of the robot and convert it

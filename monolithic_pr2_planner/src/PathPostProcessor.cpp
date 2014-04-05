@@ -282,8 +282,14 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
-        ROS_INFO("mprim type is %d", mprim->motion_type());
+        //mprim->printEndCoord();
+        //source_state->printToInfo(SEARCH_LOG);
+        //successor->printToInfo(SEARCH_LOG);
         successor->id(m_hash_mgr->getStateID(successor));
+
+        // we need to make sure robotstate has been updated after evaluateCost
+        // is called
+        real_next_successor->robot_pose(successor->robot_pose());
         bool matchesEndID = successor->id() == end_id;
         
         double temptime = clock();

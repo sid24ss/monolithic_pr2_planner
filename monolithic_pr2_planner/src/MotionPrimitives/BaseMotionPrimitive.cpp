@@ -50,19 +50,19 @@ bool BaseMotionPrimitive::apply(const GraphState& source_state,
     // steps list - they are repeats of the start and end position
     //ROS_DEBUG_NAMED(MPRIM_LOG, "Creating BaseMotionPrimitive intermediate steps");
     
-    double temptime = clock();
-    for (auto interm_mprim_steps : getIntermSteps()){
-        RobotState robot_state(std::move(source_state.robot_pose()));
-        ContBaseState interm_base(std::move(robot_state.base_state()));
-        interm_base.x(interm_base.x() + interm_mprim_steps[GraphStateElement::BASE_X]);
-        interm_base.y(interm_base.y() + interm_mprim_steps[GraphStateElement::BASE_Y]);
+    //double temptime = clock();
+    //for (auto interm_mprim_steps : getIntermSteps()){
+    //    RobotState robot_state(std::move(source_state.robot_pose()));
+    //    ContBaseState interm_base(std::move(robot_state.base_state()));
+    //    interm_base.x(interm_base.x() + interm_mprim_steps[GraphStateElement::BASE_X]);
+    //    interm_base.y(interm_base.y() + interm_mprim_steps[GraphStateElement::BASE_Y]);
 
-        // we don't add the original theta like the above because BASE_THETA
-        // represents the absolute angle, not the delta angle.
-        interm_base.theta(interm_mprim_steps[GraphStateElement::BASE_THETA]);
-        robot_state.base_state(std::move(interm_base));
-        interm_robot_steps.push_back(std::move(robot_state));
-    }
+    //    // we don't add the original theta like the above because BASE_THETA
+    //    // represents the absolute angle, not the delta angle.
+    //    interm_base.theta(interm_mprim_steps[GraphStateElement::BASE_THETA]);
+    //    robot_state.base_state(std::move(interm_base));
+    //    interm_robot_steps.push_back(std::move(robot_state));
+    //}
     //GraphState last_state(interm_robot_steps[interm_robot_steps.size()-1]);
     //assert(*successor == last_state);
     t_data.interm_robot_steps(std::move(interm_robot_steps));

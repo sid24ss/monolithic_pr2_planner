@@ -97,7 +97,6 @@ int Environment::EvaluateCost(int parentID, int childID, bool& isTrueCost){
     TransitionData t_data;
 
     size_t hashKey = m_hasher(Edge(parentID, childID));
-    ROS_INFO("looking for mprim between %d and %d", parentID, childID);
     if (m_edges.find(Edge(parentID, childID)) == m_edges.end()){
         ROS_ERROR("transition hasn't been found??");
         assert(false);
@@ -210,7 +209,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         source_state->robot_pose().visualize();
         ContBaseState test = source_state->robot_pose().base_state();
         double height = .5+test.z();
-        double simple_radius = .7;
+        double simple_radius = .8;
         Visualizer::pviz->visualizeSphere(test.x(), 
                                           test.y(),
                                           height, simple_radius, 100, "simple_check", 1);
@@ -225,26 +224,26 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         TransitionData t_data;
 
         double temptime_mprim = clock();
-
-        //if (mprim->motion_type() == MPrim_Types::ARM){
-        //    successor.reset(new GraphState(*source_state));
-        //    successor->lazyApplyMPrim(mprim->getEndCoord());
-        //    ROS_INFO("source/successor");
-        //    mprim->printEndCoord();
-        //    source_state->printToDebug(SEARCH_LOG);
-        //    successor->printToDebug(SEARCH_LOG);
-        //    ROS_INFO("done");
-        //} else {
-        //    if (!mprim->apply(*source_state, successor, t_data)){
-        //        //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
-        //        continue;
-        //    }
-        //}
-
-        if (!mprim->apply(*source_state, successor, t_data)){
-            //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
-            continue;
+        
+        if (mprim->motion_type() == MPrim_Types::ARM){
+            successor.reset(new GraphState(*source_state));
+            successor->lazyApplyMPrim(mprim->getEndCoord());
+            //ROS_INFO("source/successor");
+            //mprim->printEndCoord();
+            //source_state->printToInfo(MPRIM_LOG);
+            //successor->printToInfo(MPRIM_LOG);
+            //ROS_INFO("done");
+        } else {
+            if (!mprim->apply(*source_state, successor, t_data)){
+                //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
+                continue;
+            }
         }
+
+        //if (!mprim->apply(*source_state, successor, t_data)){
+        //    //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
+        //    continue;
+        //}
 
         mprim_time += (clock()-temptime_mprim)/(double)CLOCKS_PER_SEC;
         mprim_counts++;
@@ -275,7 +274,6 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         if (m_edges.find(key) == m_edges.end()){ // not found
             //m_edges[key] = mprim_id;
         } else {
-            ROS_INFO("edge already exists between %d %d", sourceStateID, successor->id());
             //m_edges[key] = mprim_id;
         }
         m_edges.insert(map<Edge, MotionPrimitivePtr>::value_type(key, mprim));
@@ -313,6 +311,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         //}
         mprim_id++;
     }
+
     get_succs_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
     get_succs_counts++;
     if (get_succs_counts % 100 == 0){

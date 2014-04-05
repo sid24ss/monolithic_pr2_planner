@@ -13,7 +13,7 @@ namespace monolithic_pr2_planner {
             GraphStatePtr getGraphState(int state_id);
             unsigned int getStateID(const GraphStatePtr& graph_state);
             bool exists(const GraphStatePtr& graph_state, int& potential_id);
-            bool save(GraphStatePtr& graph_state);
+            bool save(GraphStatePtr& graph_state, bool overwrite=false);
             int size() { return static_cast<int>(m_state_id_to_graph_table.size()); } ;
 
         private:

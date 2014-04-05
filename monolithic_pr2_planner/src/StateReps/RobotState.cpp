@@ -229,9 +229,9 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
                                             RightContArmState(r_angles),
                                             LeftContArmState(l_angles));
     counter++;
-    //if (counter % 1000 == 0){
-    //    ROS_WARN("ik time is %f, counter is %d", time, counter);
-    //}
+    if (counter % 1000 == 0){
+        ROS_WARN("ik time is %f, counter is %d", time, counter);
+    }
 
     return true;
 }

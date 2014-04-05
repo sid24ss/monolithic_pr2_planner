@@ -139,8 +139,8 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = pose;
-    srv.request.initial_eps = 5;
-    srv.request.final_eps = 5;
+    srv.request.initial_eps = 3;
+    srv.request.final_eps = 3;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .02;
     srv.request.roll_tolerance = .1;

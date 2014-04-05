@@ -31,7 +31,7 @@ bool GoalState::withinXYZTol(const GraphStatePtr& graph_state){
                           m_tolerances[Tolerances::PITCH],
                           m_tolerances[Tolerances::YAW]);
     DiscObjectState d_tol = c_tol.getDiscObjectState();
-    DiscObjectState obj = graph_state->getObjectStateRelMap();
+    DiscObjectState obj = graph_state->getObjectStateRelMapFromState();
 
 
     bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&
@@ -49,7 +49,7 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
                           m_tolerances[Tolerances::PITCH],
                           m_tolerances[Tolerances::YAW]);
     DiscObjectState d_tol = c_tol.getDiscObjectState();
-    DiscObjectState obj = graph_state->getObjectStateRelMap();
+    DiscObjectState obj = graph_state->getObjectStateRelMapFromState();
 
 
     bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&

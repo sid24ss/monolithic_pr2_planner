@@ -31,24 +31,12 @@ unsigned int HashManager::intHash(unsigned int key){
 unsigned int HashManager::hash(const GraphStatePtr& graph_state){
     int val = 0;
     int counter = 0;
-    auto obj_state = graph_state->getObjectStateRelBody();
-    for (auto it=obj_state.getCoordBegin(); it!=obj_state.getCoordEnd();++it){
-        val += intHash(*it) << counter;
+    vector<int> coords = graph_state->getCoords();
+    for (auto coord_value : coords){
+        val += coord_value << counter;
         counter++;
     }
 
-    auto robot_pose = graph_state->robot_pose();
-    auto base_state = robot_pose.base_state();
-    for (auto it=base_state.getCoordBegin(); it!=base_state.getCoordEnd();++it){
-        val += intHash(*it) << counter;
-        counter++;
-    }
-
-    val += intHash(robot_pose.right_free_angle()) << counter;
-    counter++;
-
-    val += intHash(robot_pose.left_free_angle()) << counter;
-    counter++;
 
     // should have used 12 values during the hash function
     // xyzrpy(obj pose) fa1 fa2 (arm) xyzyaw(base)
@@ -63,14 +51,13 @@ GraphStatePtr HashManager::getGraphState(int state_id){
 
 unsigned int HashManager::getStateID(const GraphStatePtr& graph_state){
     unsigned int bin_idx = hash(graph_state);
-    BOOST_FOREACH(auto g_s, m_coord_to_state_id_table[bin_idx]){
+    BOOST_FOREACH(auto& g_s, m_coord_to_state_id_table[bin_idx]){
         if (*g_s == *graph_state){
             return g_s->id();
         }
     }
     ROS_ERROR("Looking for state");
-    //graph_state->printToInfo(HASH_LOG);
-    graph_state->robot_pose().printToInfo(HASH_LOG);
+    graph_state->printToDebug(HASH_LOG);
     throw std::out_of_range("Graph state does not exist in heap");
 }
 
@@ -91,7 +78,7 @@ bool HashManager::exists(const GraphStatePtr& graph_state, int& id){
     return false;
 }
 
-bool HashManager::save(GraphStatePtr& graph_state){
+bool HashManager::save(GraphStatePtr& graph_state, bool overwrite){
     // this may not be the desired behavior...
     //ROS_DEBUG_NAMED(HASH_LOG, "Saving graph state");
     int potential_id;
@@ -104,7 +91,9 @@ bool HashManager::save(GraphStatePtr& graph_state){
     graph_state->id(m_state_id_to_graph_table.size());
     m_state_id_to_graph_table.push_back(graph_state);
     m_coord_to_state_id_table[bin_idx].push_back(graph_state);
-    //ROS_DEBUG_NAMED(HASH_LOG, "Saved new entry with id %d", graph_state->id());
+
+    ROS_DEBUG_NAMED(HASH_LOG, "Saved new entry with id %d", graph_state->id());
+    graph_state->printToDebug(HASH_LOG);
 
     // the planner needs this to happen. i have no idea what it's supposed to
     // do.
