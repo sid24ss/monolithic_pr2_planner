@@ -40,11 +40,11 @@ void CollisionSpaceMgr::updateMap(const arm_navigation_msgs::CollisionMap& map){
         if (map.boxes[i].center.x > maxX){
             maxX = map.boxes[i].center.x;
         }
-        if (map.boyes[i].center.y > mayY){
-            mayX = map.boyes[i].center.y;
+        if (map.boxes[i].center.y > maxY){
+            maxX = map.boxes[i].center.y;
         }
-        if (map.bozes[i].center.z > mazZ){
-            mazZ = map.bozes[i].center.z;
+        if (map.boxes[i].center.z > maxZ){
+            maxZ = map.boxes[i].center.z;
         }
     }
     m_occupancy_grid->addPointsToField(points);
