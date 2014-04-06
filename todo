@@ -38,8 +38,6 @@ fix the normalization problem in armadapdive
 restructure the computeCost function and when it's called since i use
 transitiondata class now
 
-maybe shove contbasestate for transitiondata into robot state?
-
 change mprimmgr to add and remove mprims depending on the planning request
 
 make the planner wait for base heuristic map to get loaded

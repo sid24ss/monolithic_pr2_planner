@@ -12,7 +12,7 @@ ParameterCatalog::ParameterCatalog() {
 }
 
 void ParameterCatalog::fetch(ros::NodeHandle nh){
-    ROS_INFO_NAMED(CONFIG_LOG, "fetching parameters from namespace %s", 
+    ROS_DEBUG_NAMED(CONFIG_LOG, "fetching parameters from namespace %s", 
                                 nh.getNamespace().c_str());
     m_nodehandle = nh;
     // TODO clean this up, setmotionprimitive needs to be run before parse

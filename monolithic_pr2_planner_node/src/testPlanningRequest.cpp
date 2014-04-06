@@ -149,7 +149,7 @@ int main(int argc, char** argv){
 
     srv.request.allocated_planning_time = 30;
 
-    srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
+    srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::BASE_ONLY;
 
     ROS_INFO("Sending request at : %s",
         boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()).c_str());

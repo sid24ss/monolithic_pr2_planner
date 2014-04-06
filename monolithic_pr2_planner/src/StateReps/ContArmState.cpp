@@ -91,6 +91,8 @@ void RightContArmState::initArmModel(ArmDescriptionParams& params){
 
 DiscObjectState ContArmState::getObjectStateRelBody(){
     KDL::Frame to_wrist;
+    // this doesn't need to differentiate between left and right, since the
+    // object knows which it is
 #ifdef USE_KDL_SOLVER
     // 10 is the link number for the r_wrist_roll_link
     getArmModel()->computeArmFK(m_angles, 10, &to_wrist);

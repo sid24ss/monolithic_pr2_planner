@@ -16,7 +16,6 @@ namespace monolithic_pr2_planner {
             virtual void print() const ;
             virtual int motion_type() const { return MPrim_Types::ARM; };
             virtual void computeCost(const MotionPrimitiveParams& params);
-
             void computeIntermSteps(const GraphState& source_state, 
                                     const GraphState& successor, 
                                     TransitionData& t_data);

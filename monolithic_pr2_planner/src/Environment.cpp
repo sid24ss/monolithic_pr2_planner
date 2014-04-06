@@ -432,7 +432,11 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
     RightContArmState r_arm;
     l_arm.setObjectOffset(search_request->m_params->left_arm_object);
     r_arm.setObjectOffset(search_request->m_params->right_arm_object);
+
+    // this specifically sets which arm RobotState will generate IK solutions
+    // for
     RobotState::setPlanningMode(search_request->m_params->planning_mode);
+    m_mprims.loadMPrimSet(search_request->m_params->planning_mode);
 }
 
 /*! \brief Given the solution path containing state IDs, reconstruct the

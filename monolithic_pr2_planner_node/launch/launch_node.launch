@@ -14,17 +14,18 @@
     <param name="min_x_size" value="25.0" />
     <param name="min_y_size" value="25.0" />
 
-    <param name="pointcloud_min_z" value="0.10"/>
+    <param name="pointcloud_min_z" value="0.40"/>
     <param name="pointcloud_max_z" value="1.80"/>
     <param name="filter_ground" value="true"/>
-    <param name="occupancy_min_z" value="0.05"/>
+    <param name="ground_filter/distance" value=".3"/>
+    <param name="occupancy_min_z" value="0.0"/>
     <param name="occupancy_max_z" value="2.0"/>
     <param name="base_frame_id" value="map" />
     <remap from="cloud_in" to="pcl_environment" />
 
   </node>
-  <node pkg="monolithic_pr2_planner_node" type="stlToOctomap"
-  name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae" />
+  <!--<node pkg="monolithic_pr2_planner_node" type="stlToOctomap" name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae" />-->
+  <node pkg="monolithic_pr2_planner_node" type="OctomapShifter" name="shiftBTandPublish" args="$(find monolithic_pr2_planner_node)/maps/nsh_1st_floor.bt"/>
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_description)/robots/pr2.urdf.xacro'" />
   
   <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen">

@@ -14,6 +14,7 @@
   <depend package="geometry_msgs" />
   <depend package="monolithic_pr2_planner" />
   <depend package="leatherman" />
+  <depend package="octomap_server" />
   <depend package="pcl_ros" />
   <depend package="kdl" />
   <depend package="geometry_msgs" />

@@ -39,6 +39,7 @@ namespace monolithic_pr2_planner_node {
                               int solution_cost,
                               size_t solution_size,
                               double total_planning_time);
+            void startOMPLPlanners();
 
         private:
             void loadNavMap(const nav_msgs::OccupancyGridPtr& map);

@@ -28,12 +28,24 @@ CollisionSpaceMgr::CollisionSpaceMgr(SBPLArmModelPtr right_arm,
  */
 void CollisionSpaceMgr::updateMap(const arm_navigation_msgs::CollisionMap& map){
     std::vector<Eigen::Vector3d> points;
+    double maxX=0;
+    double maxY=0;
+    double maxZ=0;
     for (int i=0; i < (int)map.boxes.size(); i++){
         Eigen::Vector3d vect;
         vect << map.boxes[i].center.x,
         map.boxes[i].center.y,
         map.boxes[i].center.z;
         points.push_back(vect);
+        if (map.boxes[i].center.x > maxX){
+            maxX = map.boxes[i].center.x;
+        }
+        if (map.boyes[i].center.y > mayY){
+            mayX = map.boyes[i].center.y;
+        }
+        if (map.bozes[i].center.z > mazZ){
+            mazZ = map.bozes[i].center.z;
+        }
     }
     m_occupancy_grid->addPointsToField(points);
 }

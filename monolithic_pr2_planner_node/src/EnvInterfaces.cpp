@@ -23,20 +23,23 @@ using namespace KDL;
 
 EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env, ros::NodeHandle nh) : 
     m_nodehandle(nh),
-    m_env(env), m_collision_space_interface(new CollisionSpaceInterface(env->getCollisionSpace(), env->getHeuristicMgr())),
-    m_generator(new StartGoalGenerator(env->getCollisionSpace())), 
-    m_rrt(new OMPLPR2Planner(env->getCollisionSpace(), RRT)),
-    m_prm(new OMPLPR2Planner(env->getCollisionSpace(), PRM_P)),
-    m_rrtstar(new OMPLPR2Planner(env->getCollisionSpace(), RRTSTAR)),
-    m_rrtstar_first_sol(new OMPLPR2Planner(env->getCollisionSpace(),
-        RRTSTARFIRSTSOL))
-{
-        getParams();
+    m_env(env), 
+    m_collision_space_interface(new CollisionSpaceInterface(env->getCollisionSpace(), env->getHeuristicMgr())),
+    m_generator(new StartGoalGenerator(env->getCollisionSpace())) {
+
+    getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
-    m_costmap_publisher.reset(new
-        costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
+    m_costmap_publisher.reset(new costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
+}
+
+void EnvInterfaces::startOMPLPlanners(){
+    m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
+    m_prm.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_P));
+    m_rrtstar.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRTSTAR));
+    m_rrtstar_first_sol.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), 
+                                                 RRTSTARFIRSTSOL));
 }
 
 /*! \brief grabs parameters from param server
