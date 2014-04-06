@@ -43,6 +43,8 @@ target_link_libraries(node monolithic_pr2_planner bfs3d ${SBPL_LIBRARIES})
 rosbuild_add_executable(testPlanningRequest src/testPlanningRequest.cpp)
 target_link_libraries(testPlanningRequest monolithic_pr2_planner)
 
+rosbuild_add_executable(OctomapShifter src/shiftBTandPublish.cpp)
+
 rosbuild_add_executable(testExecute src/testExecute.cpp)
 target_link_libraries(testExecute monolithic_pr2_planner ${SBPL_LIBRARIES})
 
