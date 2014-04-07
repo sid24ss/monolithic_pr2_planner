@@ -149,9 +149,13 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     // free angle change
     double temptime = clock();
     RightContArmState right_arm(std::move(m_robot_pose.right_arm()));
+
     int r_fa = right_arm.getDiscFreeAngle() + mprim[GraphStateElement::R_FA];
     right_arm.setDiscFreeAngle(r_fa);
     m_robot_pose.right_arm(std::move(right_arm));
+    r_fa = m_robot_pose.right_arm().getDiscFreeAngle();
+    double old_fa = right_arm.getUpperArmRollAngle();
+             
 
     LeftContArmState left_arm(std::move(m_robot_pose.left_arm()));
     int l_fa = left_arm.getDiscFreeAngle() + mprim[GraphStateElement::L_FA];
@@ -172,10 +176,24 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
     ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
 
+
     if (ik_success){
         m_robot_pose = *new_robot_pose;
+        updateStateFromRobotState();
+
+        DiscObjectState obj = m_robot_pose.getObjectStateRelBody();
+        assert(obj_state.x() == obj.x());
+        assert(obj_state.y() == obj.y());
+        assert(obj_state.z() == obj.z());
+        assert(obj_state.roll() == obj.roll());
+        assert(obj_state.pitch() == obj.pitch());
+        assert(obj_state.yaw() == obj.yaw());
+        if (r_fa != m_robot_pose.right_arm().getDiscFreeAngle()){
+            ROS_ERROR("angles don't match %d %d %f %f", r_fa, m_robot_pose.right_arm().getDiscFreeAngle(), old_fa, m_robot_pose.right_arm().getUpperArmRollAngle());
+        }
+        assert(r_fa == m_robot_pose.right_arm().getDiscFreeAngle());
+        assert(l_fa == m_robot_pose.left_arm().getDiscFreeAngle());
     }
-    updateStateFromRobotState();
     counter++;
     //if (counter % 1000 == 0){
     //    ROS_WARN("outer time is %f, counter is %d", time, counter);

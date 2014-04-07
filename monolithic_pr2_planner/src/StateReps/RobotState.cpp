@@ -192,20 +192,31 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
         SBPLArmModelPtr arm_model = seed_robot_pose.m_right_arm.getArmModel();
         bool ik_success = arm_model->computeFastIK(r_wrist_frame, r_seed, r_angles);
         if (!ik_success){
-            if (!arm_model->computeIK(r_wrist_frame, r_seed, r_angles)){
-                return false;
-            }
+            return false;
         }
+        // this is for searching over free angle. we don't want this, because
+        // this can result in the successor state being different than the
+        // source_state + mprim. ex., i'm looking at a bug now where the
+        // successor state isn't found in the heap because IK is returning a
+        // different state that hasn't been generated yet.
+        //if (!ik_success){
+        //    if (!arm_model->computeIK(r_wrist_frame, r_seed, r_angles)){
+        //        return false;
+        //    }
+        //}
     }
 
     if (use_left_arm){
         SBPLArmModelPtr arm_model = seed_robot_pose.m_right_arm.getArmModel();
         bool ik_success = arm_model->computeFastIK(l_wrist_frame, l_seed, l_angles);
         if (!ik_success){
-            if (!arm_model->computeIK(l_wrist_frame, l_seed, l_angles)){
-                return false;
-            }
+            return false;
         }
+        //if (!ik_success){
+        //    if (!arm_model->computeIK(l_wrist_frame, l_seed, l_angles)){
+        //        return false;
+        //    }
+        //}
     }
 #endif
 #ifdef USE_IKFAST_SOLVER

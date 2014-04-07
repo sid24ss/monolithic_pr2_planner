@@ -139,8 +139,8 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = pose;
-    srv.request.initial_eps = 3;
-    srv.request.final_eps = 3;
+    srv.request.initial_eps = 100;
+    srv.request.final_eps = 100;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .02;
     srv.request.roll_tolerance = .1;
@@ -149,7 +149,7 @@ int main(int argc, char** argv){
 
     srv.request.allocated_planning_time = 30;
 
-    srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::BASE_ONLY;
+    srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
     ROS_INFO("Sending request at : %s",
         boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()).c_str());

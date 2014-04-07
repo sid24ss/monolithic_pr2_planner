@@ -49,6 +49,9 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
 
 int Environment::GetGoalHeuristic(int stateID){
     // For now, return the max of all the heuristics
+    if (stateID == GOAL_STATE){
+        return 0;
+    }
     return GetGoalHeuristic(stateID, 0);
 }
 
@@ -97,15 +100,12 @@ int Environment::EvaluateCost(int parentID, int childID, bool& isTrueCost){
     TransitionData t_data;
 
     size_t hashKey = m_hasher(Edge(parentID, childID));
+    vector<MotionPrimitivePtr> small_mprims;
     if (m_edges.find(Edge(parentID, childID)) == m_edges.end()){
-        ROS_ERROR("transition hasn't been found??");
+        ROS_ERROR("transition hasn't been found between %d and %d??", parentID, childID);
         assert(false);
     }
-
-    //ROS_INFO("stored at %lu is %x", hashKey, m_edges[hashKey].get());
-    vector<MotionPrimitivePtr> small_mprims;
     small_mprims.push_back(m_edges[Edge(parentID, childID)]);
-    //small_mprims.push_back(m_edges[hashKey]);
 
 
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
@@ -176,7 +176,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GetSuccs(sourceStateID, succIDs, costs);
     for (size_t i=0; i < costs->size(); i++){
         bool val = (*succIDs)[i] == GOAL_STATE;
-        isTrueCost->push_back(val);
+        isTrueCost->push_back(false);
     }
 }
 
@@ -228,11 +228,11 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         if (mprim->motion_type() == MPrim_Types::ARM){
             successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
-            //ROS_INFO("source/successor");
-            //mprim->printEndCoord();
-            //source_state->printToInfo(MPRIM_LOG);
-            //successor->printToInfo(MPRIM_LOG);
-            //ROS_INFO("done");
+            ROS_INFO("source/successor");
+            mprim->printEndCoord();
+            source_state->printToInfo(MPRIM_LOG);
+            successor->printToInfo(MPRIM_LOG);
+            ROS_INFO("done");
         } else {
             if (!mprim->apply(*source_state, successor, t_data)){
                 //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -254,11 +254,14 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         m_hash_mgr->save(successor);
 
         double temptime_hash = clock();
+        Edge key; 
         if (m_goal->isSatisfiedBy(successor)){
             m_goal->storeAsSolnState(successor);
             succIDs->push_back(GOAL_STATE);
+            key = Edge(sourceStateID, GOAL_STATE);
         } else {
             succIDs->push_back(successor->id());
+            key = Edge(sourceStateID, successor->id());
         }
         hash_time += (clock()-temptime_hash)/(double)CLOCKS_PER_SEC;
         hash_counts++;
@@ -266,7 +269,6 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
             ROS_WARN("hash time %f counts %d", hash_time, hash_counts);
         }
 
-        Edge key = Edge(sourceStateID, successor->id());
         //ROS_INFO("hashed edge between %d %d to %lu", sourceStateID, 
         //                                             successor->id(), hashKey);
         //m_edges[hashKey] = mprim;

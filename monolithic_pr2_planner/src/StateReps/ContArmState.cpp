@@ -30,7 +30,11 @@ ContArmState::ContArmState() :
 }
 
 ContArmState::ContArmState(vector<double> arm_state) : 
-    m_angles(arm_state) {
+    m_angles(7,0) {
+        assert(arm_state.size() == m_angles.size());
+        for (int i=0; i < m_angles.size(); i++){
+            m_angles[i] = normalize_angle_positive(arm_state[i]);
+        }
 }
 
 void ContArmState::setRobotResolutionParams(const RobotResolutionParams& params){

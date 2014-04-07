@@ -280,6 +280,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
     for (auto mprim : mprims){
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data)){
+            ROS_INFO("mprim failed to be applied");
             continue;
         }
         //mprim->printEndCoord();
@@ -295,6 +296,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         double temptime = clock();
         if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
                 m_cspace_mgr->isValidTransitionStates(t_data))){
+            ROS_INFO("failed CC");
             continue;
         }
         cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
@@ -305,7 +307,13 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
 
         bool isCheaperAction = t_data.cost() < best_cost;
 
-        if (matchesEndID && isCheaperAction){
+        // TODO we need to actually check if the successor here satisfies the
+        // goal. i'm throwing in a hack at the moment to skip this step, because
+        // this function doesn't have access to m_goal. instead, i'll just say
+        // if it passes mprim->apply and CC and the end_id==1, it's probably
+        // good enough. but we actually need to make sure that the successor
+        // that's created satisfies the goal constraints.
+        if ((matchesEndID && isCheaperAction) || end_id == 1){
             best_cost = t_data.cost();
             best_transition = t_data;
             best_transition.successor_id(successor->id());

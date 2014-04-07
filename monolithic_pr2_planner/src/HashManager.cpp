@@ -56,7 +56,20 @@ unsigned int HashManager::getStateID(const GraphStatePtr& graph_state){
             return g_s->id();
         }
     }
-    ROS_ERROR("Looking for state");
+    std::vector<int> tmp = graph_state->getCoords();
+    ROS_ERROR("Looking for state %d %d %d %d %d %d %d %d %d %d %d %d",
+              tmp[0],
+              tmp[1],
+              tmp[2],
+              tmp[3],
+              tmp[4],
+              tmp[5],
+              tmp[6],
+              tmp[7],
+              tmp[8],
+              tmp[9],
+              tmp[10],
+              tmp[11]);
     graph_state->printToDebug(HASH_LOG);
     throw std::out_of_range("Graph state does not exist in heap");
 }
