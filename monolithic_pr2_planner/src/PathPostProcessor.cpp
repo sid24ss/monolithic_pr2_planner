@@ -44,19 +44,19 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
         }
     }
     
-    vector<FullBodyState> unshortcut_path = getFinalPath(soln_path, 
-                                                    transition_states,
-                                                    goal_state);
+    //vector<FullBodyState> unshortcut_path = getFinalPath(soln_path, 
+    //                                                transition_states,
+    //                                                goal_state);
 
 
-    return unshortcut_path;
+    //return unshortcut_path;
     // code for shortcutting. i don't want shortcutting right now.
-    //ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    //temptime = clock();
-    //std::vector<FullBodyState> final_path = shortcutPath(soln_path,
-    //    transition_states, goal_state);
-    //ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    //return final_path;
+    ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    temptime = clock();
+    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+        transition_states, goal_state);
+    ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    return final_path;
 }
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
@@ -280,7 +280,6 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
     for (auto mprim : mprims){
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data)){
-            ROS_INFO("mprim failed to be applied");
             continue;
         }
         //mprim->printEndCoord();
@@ -294,9 +293,9 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         bool matchesEndID = successor->id() == end_id;
         
         double temptime = clock();
+        RobotState tmp = successor->robot_pose();
         if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
                 m_cspace_mgr->isValidTransitionStates(t_data))){
-            ROS_INFO("failed CC");
             continue;
         }
         cc_time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
@@ -412,10 +411,10 @@ bool PathPostProcessor::stateInterpolate(const RobotState& start, const RobotSta
     int num_interp_steps = RobotState::numInterpSteps(start, end);
     vector<ContObjectState> interp_obj_steps;
     vector<ContBaseState> interp_base_steps;
-    ROS_DEBUG_NAMED(MPRIM_LOG, "start obj");
-    start_obj.printToDebug(MPRIM_LOG);
-    ROS_DEBUG_NAMED(MPRIM_LOG, "end obj");
-    end_obj.printToDebug(MPRIM_LOG);
+    //ROS_DEBUG_NAMED(MPRIM_LOG, "start obj");
+    //start_obj.printToDebug(MPRIM_LOG);
+    //ROS_DEBUG_NAMED(MPRIM_LOG, "end obj");
+    //end_obj.printToDebug(MPRIM_LOG);
     interp_obj_steps = ContObjectState::interpolate(start_obj, end_obj, 
                                                     num_interp_steps);
     interp_base_steps = ContBaseState::interpolate(start_base, end_base, 
@@ -432,7 +431,7 @@ bool PathPostProcessor::stateInterpolate(const RobotState& start, const RobotSta
 
     // Returns all the full body states in between. It's continuous.
     for (size_t i=0; i < interp_obj_steps.size(); i++){
-        interp_obj_steps[i].printToDebug(MPRIM_LOG);
+        //interp_obj_steps[i].printToDebug(MPRIM_LOG);
         RobotState seed(interp_base_steps[i], start.right_arm(), start.left_arm());
         RobotPosePtr new_robot_state;
         if (!RobotState::computeRobotPose(interp_obj_steps[i], seed, new_robot_state)){

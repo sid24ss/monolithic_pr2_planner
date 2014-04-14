@@ -174,23 +174,30 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     bool ik_success = true;
     RobotPosePtr new_robot_pose;
     time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
-    ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
+    ContObjectState tmp1(obj_state);
 
+    ik_success = RobotState::computeRobotPose(obj_state, m_robot_pose, new_robot_pose);
 
     if (ik_success){
         m_robot_pose = *new_robot_pose;
         updateStateFromRobotState();
+                 
 
         DiscObjectState obj = m_robot_pose.getObjectStateRelBody();
+
         assert(obj_state.x() == obj.x());
         assert(obj_state.y() == obj.y());
         assert(obj_state.z() == obj.z());
+        if (obj_state.roll() != obj.roll()){
+            ROS_ERROR("angles don't match %d %d", obj_state.roll(), obj.roll());
+            return false;
+        }
         assert(obj_state.roll() == obj.roll());
         assert(obj_state.pitch() == obj.pitch());
         assert(obj_state.yaw() == obj.yaw());
-        if (r_fa != m_robot_pose.right_arm().getDiscFreeAngle()){
-            ROS_ERROR("angles don't match %d %d %f %f", r_fa, m_robot_pose.right_arm().getDiscFreeAngle(), old_fa, m_robot_pose.right_arm().getUpperArmRollAngle());
-        }
+        //if (r_fa != m_robot_pose.right_arm().getDiscFreeAngle()){
+        //    ROS_ERROR("angles don't match %d %d %f %f", r_fa, m_robot_pose.right_arm().getDiscFreeAngle(), old_fa, m_robot_pose.right_arm().getUpperArmRollAngle());
+        //}
         assert(r_fa == m_robot_pose.right_arm().getDiscFreeAngle());
         assert(l_fa == m_robot_pose.left_arm().getDiscFreeAngle());
     }

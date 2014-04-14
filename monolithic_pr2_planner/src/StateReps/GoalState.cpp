@@ -50,11 +50,13 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
                           m_tolerances[Tolerances::YAW]);
     DiscObjectState d_tol = c_tol.getDiscObjectState();
     DiscObjectState obj = graph_state->getObjectStateRelMapFromState();
+    obj.printToDebug(MPRIM_LOG);
+    m_goal_state.printToDebug(MPRIM_LOG);
+    d_tol.printToDebug(MPRIM_LOG);
 
-
-    bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&
-                           abs(m_goal_state.y()-obj.y()) < d_tol.y() &&
-                           abs(m_goal_state.z()-obj.z()) < d_tol.z());
+    bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) <= d_tol.x() &&
+                           abs(m_goal_state.y()-obj.y()) <= d_tol.y() &&
+                           abs(m_goal_state.z()-obj.z()) <= d_tol.z());
     bool within_rpy_tol = (abs(m_goal_state.roll()-obj.roll()) < d_tol.roll() &&
                            abs(m_goal_state.pitch()-obj.pitch()) < d_tol.pitch() &&
                            abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());

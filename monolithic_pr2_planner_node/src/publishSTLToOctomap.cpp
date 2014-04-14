@@ -298,7 +298,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
 
     //addRandomObstacles(pclCloud, 2, 5);
     //addStartStateRegionToParamServer();
-    createHallwayScene(pclCloud);
+    //createHallwayScene(pclCloud);
 
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg (*pclCloud, pc);

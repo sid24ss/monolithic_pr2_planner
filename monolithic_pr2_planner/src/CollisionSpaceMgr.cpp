@@ -22,6 +22,17 @@ CollisionSpaceMgr::CollisionSpaceMgr(SBPLArmModelPtr right_arm,
         exit(1);
     }
     ROS_DEBUG_NAMED(INIT_LOG, "Launched collision space manager");
+
+    geometry_msgs::Pose pose;
+    pose.position.x = 0;
+    pose.position.y = 0;
+    pose.position.z = 0;
+
+    pose.orientation.w = 1;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+    m_cspace->attachCube("tray", "r_wrist_roll_link", pose, .5,.5,.1);
 }
 
 /*! \brief Updates the internal collision map of the collision checker.
@@ -73,7 +84,7 @@ bool CollisionSpaceMgr::isValid(RobotState& robot_pose){
     robot_pose.printToDebug(CSPACE_LOG);
     Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
                                     std::string("planner"), 0);
-    return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, false, dist_temp, 
+    return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, true, dist_temp, 
                                     debug_code);
 }
 
@@ -109,9 +120,9 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
                                          const TransitionData& t_data){
     // run the simple check first
     RobotState pose = successor.robot_pose();
-    if (isValidSimpleCheck(pose)){
-        return true;
-    }
+    //if (isValidSimpleCheck(pose)){
+    //    return true;
+    //}
 
     vector<double> r_arm(7), l_arm(7);
     pose.right_arm().getAngles(&r_arm);
@@ -195,4 +206,74 @@ bool CollisionSpaceMgr::isValidContState(std::vector<double>& l_arm, std::vector
     if(!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug))
         return false;
     return true;
+}
+
+void CollisionSpaceMgr::addAttachedObject(){
+    double box_x, box_y, box_z;
+    box_x = 1; box_y = 1; box_z = .1;
+
+    // location of the origin of the box
+    double body_frame_x = 0;
+    double body_frame_y = 0;
+    double body_frame_z = 0;
+
+
+    for (int i=0; i < static_cast<int>(box_x/box_z); i++){
+        KDL::Vector v(body_frame_x, body_frame_y + box_z*i, body_frame_z);
+        m_object_points.push_back(v);
+    }
+    for (int i=0; i < static_cast<int>(box_y/box_z); i++){
+        KDL::Vector v(body_frame_x + box_z*i, body_frame_y, body_frame_z);
+        m_object_points.push_back(v);
+    }
+    for (int i=0; i < static_cast<int>(box_y/box_z); i++){
+        KDL::Vector v(body_frame_x + box_z*i, body_frame_y + box_y, body_frame_z);
+        m_object_points.push_back(v);
+    }
+    for (int i=0; i < static_cast<int>(box_y/box_z); i++){
+        KDL::Vector v(body_frame_x+box_x, body_frame_y + box_z*i, body_frame_z);
+        m_object_points.push_back(v);
+    }
+}
+
+void CollisionSpaceMgr::visualizeAttachedObject(RobotState& robot_state){
+    vector<double> t1, t2;
+    t2 = robot_state.right_arm().getAngles();
+    t1 = robot_state.left_arm().getAngles();
+    BodyPose bp = robot_state.base_state().getBodyPose();
+    std::vector<std::vector<double> > spheres;
+    m_cspace->getAttachedObjectSpheres(t1, t2, bp, spheres);
+    Visualizer::pviz->visualizeSpheres(spheres, 100, "object", .04);
+}
+
+
+void CollisionSpaceMgr::visualizeRobotAndObject(){
+    ROS_INFO("visualizing attached objects");
+    sleep(2);
+    ContBaseState tmp1;
+    RightContArmState tmp2;
+    LeftContArmState tmp3;
+    RobotState robot(tmp1, tmp2, tmp3);
+    robot.visualize();
+    geometry_msgs::Pose pose;
+    pose.position.x = 0;
+    pose.position.y = 0;
+    pose.position.z = 0;
+
+    pose.orientation.w = 1;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+
+    m_cspace->attachCube("tray", "r_wrist_roll_link", pose, .5,.5,.5);
+    //visualizeAttachedObject(robot, m_object_points);
+    vector<double> t1, t2;
+    t1 = tmp2.getAngles();
+    t2 = tmp3.getAngles();
+    BodyPose bp = tmp1.body_pose();
+
+    m_cspace->visualizeRobotCollisionModel(t1, t2, bp, "collisionmodel", 1);
+    std::vector<std::vector<double> > spheres;
+    m_cspace->getAttachedObjectSpheres(t1, t2, bp, spheres);
+    Visualizer::pviz->visualizeSpheres(spheres, 100, "object", .1);
 }

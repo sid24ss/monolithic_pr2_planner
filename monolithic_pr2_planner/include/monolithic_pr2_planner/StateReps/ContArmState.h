@@ -55,6 +55,7 @@ namespace monolithic_pr2_planner {
             };
 
             void getAngles(std::vector<double>* angles) const; 
+            std::vector<double> getAngles() const { return m_angles; }; 
             std::vector<double>::const_iterator getAnglesBegin() const{return m_angles.begin();};
             std::vector<double>::const_iterator getAnglesEnd() const { return m_angles.end(); };
 

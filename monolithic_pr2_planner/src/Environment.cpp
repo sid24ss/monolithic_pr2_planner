@@ -210,10 +210,13 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         ContBaseState test = source_state->robot_pose().base_state();
         double height = .5+test.z();
         double simple_radius = .8;
+        RobotState tmp = source_state->robot_pose();
         Visualizer::pviz->visualizeSphere(test.x(), 
                                           test.y(),
                                           height, simple_radius, 100, "simple_check", 1);
+        m_cspace_mgr->visualizeAttachedObject(tmp);
         usleep(5000);
+        std::cin.get();
     }
 
     int mprim_id = 0;
@@ -228,11 +231,11 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         if (mprim->motion_type() == MPrim_Types::ARM){
             successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
-            ROS_INFO("source/successor");
-            mprim->printEndCoord();
-            source_state->printToInfo(MPRIM_LOG);
-            successor->printToInfo(MPRIM_LOG);
-            ROS_INFO("done");
+            //ROS_INFO("source/successor");
+            //mprim->printEndCoord();
+            //source_state->printToInfo(MPRIM_LOG);
+            //successor->printToInfo(MPRIM_LOG);
+            //ROS_INFO("done");
         } else {
             if (!mprim->apply(*source_state, successor, t_data)){
                 //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -332,6 +335,8 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     if (!search_request->isValid(m_cspace_mgr)){
         obj_state.printToInfo(SEARCH_LOG);
         start_pose.visualize();
+        m_cspace_mgr->visualizeAttachedObject(start_pose);
+        usleep(1000);
         return false;
     }
 

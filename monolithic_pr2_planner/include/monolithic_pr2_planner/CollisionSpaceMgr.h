@@ -36,8 +36,14 @@ namespace monolithic_pr2_planner {
             void updateMap(const arm_navigation_msgs::CollisionMap& map);
             bool loadMap(const std::vector<Eigen::Vector3d>& points);
 
+            //  only adds a box right now
+            void addAttachedObject();
+            void visualizeRobotAndObject();
+            void visualizeAttachedObject(RobotState& robot_state);
+
         private:
             boost::shared_ptr<pr2_collision_checker::PR2CollisionSpace> m_cspace;
+            vector<KDL::Vector> m_object_points;
     };
     typedef boost::shared_ptr<CollisionSpaceMgr> CSpaceMgrPtr;
 }

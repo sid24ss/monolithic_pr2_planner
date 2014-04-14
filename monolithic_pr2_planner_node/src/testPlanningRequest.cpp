@@ -41,7 +41,7 @@ int main(int argc, char** argv){
     // right_arm_start[6] = -1.136617;
 
     right_arm_start[0] = -0.034127;
-    right_arm_start[1] = 0.309261;
+    right_arm_start[1] = 1.09261;
     right_arm_start[2] = 0.000000;
     right_arm_start[3] = -1.614009;
     right_arm_start[4] = 2.987015;
@@ -69,7 +69,7 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
 
  
-    body_start[0] = 1.0040000;
+    body_start[0] = 2.0040000;
     body_start[1] = 1.00000;
     body_start[2] = 0.260000;
     body_start[3] = -M_PI;
@@ -84,13 +84,13 @@ int main(int argc, char** argv){
     srv.request.body_start = body_start;
 
     // Config1
-    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
 
     // Config2 - cupboard
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
 
-    KDL::Rotation rot = KDL::Rotation::RPY(-0.145,0.321,-M_PI);
+    //KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -106,9 +106,9 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 8.0000;
-    pose.pose.position.y = 5.0000;
-    pose.pose.position.z = 1.18000;
+    pose.pose.position.x = 3.1000;
+    pose.pose.position.y = 3.0000;
+    pose.pose.position.z = 1.08000;
 
     // pose.pose.position.x = 6.440000;
     // pose.pose.position.y = 0.460000;
@@ -142,7 +142,7 @@ int main(int argc, char** argv){
     srv.request.initial_eps = 100;
     srv.request.final_eps = 100;
     srv.request.dec_eps = .1;
-    srv.request.xyz_tolerance = .02;
+    srv.request.xyz_tolerance = .04;
     srv.request.roll_tolerance = .1;
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;

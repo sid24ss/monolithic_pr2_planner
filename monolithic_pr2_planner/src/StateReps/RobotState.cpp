@@ -158,6 +158,9 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
     KDL::Frame r_obj_to_wrist_offset = seed_robot_pose.right_arm().getObjectOffset();
     KDL::Frame l_obj_to_wrist_offset = seed_robot_pose.left_arm().getObjectOffset();
 
+    double r,p,y;
+    obj_frame.M.GetRPY(r,p,y);
+
     KDL::Frame r_wrist_frame = obj_frame * r_obj_to_wrist_offset;
     KDL::Frame l_wrist_frame = obj_frame * l_obj_to_wrist_offset;
 
@@ -194,6 +197,13 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
         if (!ik_success){
             return false;
         }
+
+        RightContArmState tmp(r_angles);
+        ContObjectState obj_r = tmp.getObjectStateRelBody();
+        double r,p,y;
+        r_wrist_frame.M.GetRPY(r,p,y);
+
+
         // this is for searching over free angle. we don't want this, because
         // this can result in the successor state being different than the
         // source_state + mprim. ex., i'm looking at a bug now where the
