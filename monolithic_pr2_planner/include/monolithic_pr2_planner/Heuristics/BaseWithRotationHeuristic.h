@@ -21,6 +21,7 @@ namespace monolithic_pr2_planner {
 
             static void visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1,
                 double res);
+            std::pair<int,int> getBestParent(int x, int y);
         private:
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
             unsigned int m_size_col;

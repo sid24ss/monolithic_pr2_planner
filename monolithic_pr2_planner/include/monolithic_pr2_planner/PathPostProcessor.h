@@ -18,6 +18,12 @@ namespace monolithic_pr2_planner {
             std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids,
                                                        GoalState& goal_state,
                                                        std::vector<MotionPrimitivePtr> mprims);
+            std::vector<FullBodyState> reconstructPath(
+                                            std::vector<int> state_ids,
+                                            GoalState& goal_state,
+                                            std::map< std::pair<int,int>,
+                                            std::vector<MotionPrimitivePtr> >&
+                                                       edge_cache);
             void visualizeFinalPath(std::vector<FullBodyState> path);
             bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);

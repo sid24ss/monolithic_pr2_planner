@@ -55,8 +55,77 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     return final_path;
 }
 
+std::vector<FullBodyState> PathPostProcessor::reconstructPath(
+                                            std::vector<int> soln_path,
+                                            GoalState& goal_state,
+                                            std::map< std::pair<int,int>,
+                                            std::vector<MotionPrimitivePtr> >&
+                                                       edge_cache)
+{
+    double temptime = clock();
+    vector<TransitionData> transition_states;
+    // the last state in the soln path return by the SBPL planner will always be
+    // the goal state ID. Since this doesn't actually correspond to a real state
+    // in the heap, we have to look it up.
+    // soln_path[soln_path.size()-1] = goal_state.getSolnState()->id();
+    // ROS_DEBUG_NAMED(SEARCH_LOG, "setting goal state id to %d", 
+                                 // goal_state.getSolnState()->id());
+    for (size_t i=0; i < soln_path.size()-1; i++){
+        std::vector<MotionPrimitivePtr> mprims = edge_cache.at(std::make_pair(soln_path[i],
+            soln_path[i+1]));
+        // TransitionData best_transition;
+        GraphStatePtr source_state = m_hash_mgr->getGraphState(soln_path[i]);
+        GraphStatePtr successor, tmp;
+        GraphStatePtr real_next_successor = m_hash_mgr->getGraphState(soln_path[i+1]);
+        tmp = source_state;
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "reconstructing %d - %d : mprims : %d",
+            source_state->id(), real_next_successor->id(), static_cast<int>(mprims.size()));
+        std::vector<TransitionData> this_step_tdata;
+        for (auto&& mprim : mprims) {
+            TransitionData t_data;
+            bool success = mprim->apply(*tmp, successor, t_data);
+            if (success) {
+                this_step_tdata.push_back(t_data);
+            } else {
+                ROS_ERROR("Successor not found during path reconstruction!");
+            }
+            tmp = successor;
+        }
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "this_step_tdata : %d", this_step_tdata.size());
+        TransitionData combined_tdata = this_step_tdata[0];
+        for (size_t t = 1; t < this_step_tdata.size(); t++) {
+            ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "appending tdata %d", t);
+            combined_tdata = TransitionData::combineTData(combined_tdata,
+                this_step_tdata[t]);
+        }
+        transition_states.push_back(combined_tdata);
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "transition_states : %d",
+            transition_states.size());
+        successor->id(m_hash_mgr->getStateID(successor));
+        // the successor's id for the goal state is not going to match with the
+        // goal state ID (which is in real_next_successor->id())
+        bool matchesEndID = (successor->id() == real_next_successor->id())
+                            || ((i+1) == soln_path.size()-1);
+        if (!matchesEndID)
+            ROS_ERROR("Wrong state in the path!");
+    }
+    
+    ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    // vector<FullBodyState> final_path = getFinalPath(soln_path, 
+    //                                                 transition_states,
+    //                                                 goal_state);
+
+    // temptime = clock();
+    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+        transition_states, goal_state);
+    // ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    return final_path;
+}
+
+
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
-    state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
+    state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state)
+{
     ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %ld, transition data : %ld",
         state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
@@ -156,7 +225,8 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     return final_path;
 }
 
-void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
+void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path)
+{
     for (auto& state : path){
         vector<double> l_arm, r_arm, base;
         l_arm = state.left_arm;
@@ -186,7 +256,8 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
  * @param original_path The path to compare against
  */
 bool PathPostProcessor::isBasePathBetter(std::vector<FullBodyState> &new_path,
-    std::vector<FullBodyState> &original_path){
+    std::vector<FullBodyState> &original_path)
+{
     double new_dist = 0;
     for (size_t i = 0; i < new_path.size()-1; ++i)
     {

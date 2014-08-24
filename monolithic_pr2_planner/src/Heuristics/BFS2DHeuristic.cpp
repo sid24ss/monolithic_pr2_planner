@@ -33,7 +33,7 @@ BFS2DHeuristic::BFS2DHeuristic(){
 }
 
 BFS2DHeuristic::~BFS2DHeuristic(){
-    m_gridsearch.reset();
+    m_gridsearch.reset();  // unique_ptr reset
     for (unsigned int i=0; i < m_size_col; i++){
         delete m_grid[i];
     }

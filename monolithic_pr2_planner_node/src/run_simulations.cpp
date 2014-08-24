@@ -5,6 +5,7 @@
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <angles/angles.h>
+#include <sbpl/planners/mha_planner.h>
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "simulation");
@@ -100,6 +101,9 @@ int main(int argc, char** argv){
     srv.request.yaw_tolerance = .1;
 
     srv.request.allocated_planning_time = 60;
+
+    srv.request.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+    srv.request.planner_type = mha_planner::PlannerType::SMHA;
 
     srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 

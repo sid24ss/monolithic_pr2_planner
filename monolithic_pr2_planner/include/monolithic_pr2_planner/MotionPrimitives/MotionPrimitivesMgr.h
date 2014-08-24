@@ -19,6 +19,8 @@ namespace monolithic_pr2_planner {
             bool loadMPrims(const MotionPrimitiveParams& files);
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
+            std::vector<MotionPrimitivePtr> getBaseAndTorsoMotionPrims();
+            std::vector<MotionPrimitivePtr> getArmMotionPrims();
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();

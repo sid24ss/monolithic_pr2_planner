@@ -121,3 +121,10 @@ void BaseWithRotationHeuristic::setDesiredOrientation(KDL::Rotation desired_orie
     desired_orientation.GetRPY(roll, pitch, yaw);
     m_desired_orientation = normalize_angle_positive(yaw);
 }
+
+std::pair<int,int> BaseWithRotationHeuristic::getBestParent(int x, int y)
+{
+    std::pair <int, int> parent;
+    m_gridsearch->getParent(x, y, parent.first, parent.second);
+    return parent;
+}

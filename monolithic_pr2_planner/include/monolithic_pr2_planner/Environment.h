@@ -39,6 +39,8 @@ namespace monolithic_pr2_planner {
                 vector<int>* costs, int ii);
             virtual void GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
                 vector<int>* costs, std::vector<bool>* isTrueCost);
+            virtual void GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
+                vector<int>* costs, std::vector<bool>* isTrueCost, int q_id);
             virtual int GetTrueCost(int parentID, int childID);
             std::vector<FullBodyState> reconstructPath(std::vector<int> 
                 state_ids);
@@ -77,6 +79,6 @@ namespace monolithic_pr2_planner {
             int  SizeofCreatedEnv(){ return m_hash_mgr->size(); };
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
-            std::map<Edge, MotionPrimitivePtr> m_edges;
+            std::map<Edge, std::vector<MotionPrimitivePtr> > m_edges;
     };
 }

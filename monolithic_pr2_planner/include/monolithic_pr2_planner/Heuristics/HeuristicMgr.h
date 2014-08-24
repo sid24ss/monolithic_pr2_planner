@@ -75,6 +75,7 @@ namespace monolithic_pr2_planner {
             // Get the heuristic value
             void getGoalHeuristic(const GraphStatePtr& state,
                 std::unique_ptr<stringintmap>& values);
+            int getGoalHeuristic(const GraphStatePtr& state, std::string name);
 
             // MHA stuff
 
@@ -92,6 +93,9 @@ namespace monolithic_pr2_planner {
             // prints a complete summary of all the heuristics.
             void printSummaryToInfo(char* logger);
             void printSummaryToDebug(char* logger);
+
+            std::pair<int,int> getBestParent(std::string heur_name, int current_x, int
+                current_y);
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
         inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};

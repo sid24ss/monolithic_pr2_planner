@@ -2,6 +2,7 @@
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/StateReps/ContArmState.h>
+#include <stdexcept>
 #include <memory>
 #include <kdl/frames.hpp>
 #include <vector>
@@ -40,6 +41,10 @@ namespace monolithic_pr2_planner {
             virtual void setDesiredOrientation(KDL::Rotation rot) {};
             // For the ArmAnglesHeur
             virtual void setGoalArmState(RightContArmState& soln_r_arm_state) {};
+            // For base heuristics, we sometimes want the best cell to move to
+            virtual std::pair<int,int> getBestParent(int x, int y) {
+                throw std::logic_error("getBestParent not implemented!");
+            };
         private:
             int m_cost_multiplier;
     };

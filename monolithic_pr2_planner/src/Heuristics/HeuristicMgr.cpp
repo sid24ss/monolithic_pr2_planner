@@ -133,8 +133,12 @@ HeuristicMgr::HeuristicMgr() :
 /**
  * @brief Resets the heuristic manager.
  */
-void HeuristicMgr::reset(){
-    ROS_DEBUG_NAMED(HEUR_LOG, "Resetting the heuristic manager.");
+void HeuristicMgr::reset() {
+    ROS_INFO_NAMED(HEUR_LOG, "Resetting the heuristic manager.");
+    for (auto& heur: m_heuristic_map) {
+        ROS_INFO_NAMED(HEUR_LOG, "shared_ptr count of %s is %d", heur.first.
+            c_str(), m_heuristics[heur.second].use_count());
+    }
     m_heuristics.clear();
     m_heuristic_map.clear();
     initializeHeuristics();
@@ -186,11 +190,11 @@ void HeuristicMgr::initializeHeuristics() {
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 
-    {
-        int cost_multiplier = 1;
-        KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
-        addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
-    }
+    // {
+    //     int cost_multiplier = 1;
+    //     KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+    //     addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
+    // }
 
     // {
     //     int cost_multiplier = 1;
@@ -573,14 +577,14 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     }
     initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
         selected_points[0].second, cost_multiplier, 0.0);
-    {
-        int cost_multiplier = 20;
-        ContObjectState goal_state = m_goal.getObjectState().getContObjectState();
-        KDL::Rotation rot = KDL::Rotation::RPY(goal_state.roll(), goal_state.pitch(),
-            goal_state.yaw());
-        addEndEffWithRotHeur("endeff_rot_goal", rot, cost_multiplier);
-        m_heuristics[m_heuristic_map["endeff_rot_goal"]]->setGoal(m_goal);
-    }
+    // {
+    //     int cost_multiplier = 20;
+    //     ContObjectState goal_state = m_goal.getObjectState().getContObjectState();
+    //     KDL::Rotation rot = KDL::Rotation::RPY(goal_state.roll(), goal_state.pitch(),
+    //         goal_state.yaw());
+    //     addEndEffWithRotHeur("endeff_rot_goal", rot, cost_multiplier);
+    //     m_heuristics[m_heuristic_map["endeff_rot_goal"]]->setGoal(m_goal);
+    // }
 
     printSummaryToInfo(HEUR_LOG);
 }
@@ -611,4 +615,18 @@ void HeuristicMgr::printSummaryToDebug(char* logger){
         ROS_DEBUG_NAMED(logger, "%s -- id %d",
             heuristic.first.c_str(), heuristic.second);
     }
+}
+
+std::pair<int,int> HeuristicMgr::getBestParent(std::string heuristic_name, int current_x, int current_y)
+{
+    std::pair <int, int> best_parent = 
+        m_heuristics[m_heuristic_map[heuristic_name]]->getBestParent(
+                                                        current_x, current_y);
+    return best_parent;
+}
+
+int HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::string name)
+{
+    assert(!m_heuristics.empty());
+    return m_heuristics[m_heuristic_map[name]]->getGoalHeuristic(state);
 }

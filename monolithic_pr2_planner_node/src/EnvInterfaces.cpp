@@ -355,9 +355,11 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     m_env->setPlannerType(planner_type);
     m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
-    if (!m_env->configureRequest(search_request, start_id, goal_id))
+    if (!m_env->configureRequest(search_request, start_id, goal_id)){
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
          planner_prefix.c_str(), counter);
+        return false;
+    }
     //m_mha_planner->set_initialsolution_eps1(EPS1); TODO:MIKE
     //m_mha_planner->set_initialsolution_eps2(EPS2); TODO:MIKE
     //m_mha_planner->set_search_mode(return_first_soln); TODO:Venkat
