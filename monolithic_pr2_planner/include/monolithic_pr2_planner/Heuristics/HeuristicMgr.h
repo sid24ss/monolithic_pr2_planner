@@ -35,6 +35,7 @@ namespace monolithic_pr2_planner {
     class HeuristicMgr : public OccupancyGridUser {
         public:
             HeuristicMgr();
+            ~HeuristicMgr();
             // HeuristicMgr(CSpaceMgrPtr cspace_mgr);
 
             // The master function that initializes all the heuristics you
