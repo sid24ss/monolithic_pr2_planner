@@ -200,7 +200,7 @@ void HeuristicMgr::initializeHeuristics() {
     // Already in mm.
     {
         int cost_multiplier = 1;
-        double radius_around_goal = 0.6; //0.75;
+        double radius_around_goal = 0.60; //0.75;
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 
@@ -661,15 +661,17 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     }
 
 
-    ROS_INFO_NAMED(HEUR_LOG, "init arm_angles_folded");
-    ContBaseState dummy_base;
-    LeftContArmState dummy_larm;
-    RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
-    RobotState rs(dummy_base, folded_rarm, dummy_larm);
-    DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
-    GoalState localFoldedArmGoal;
-    localFoldedArmGoal.setGoal(localFoldedArmObject);
-    addEndEffLocalHeur("arm_angles_folded", 100, localFoldedArmGoal);
+    // ROS_INFO_NAMED(HEUR_LOG, "init arm_angles_folded");
+    // ContBaseState dummy_base;
+    // LeftContArmState dummy_larm;
+    // //RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
+    // RightContArmState folded_rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+
+    // RobotState rs(dummy_base, folded_rarm, dummy_larm);
+    // DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
+    // GoalState localFoldedArmGoal;
+    // localFoldedArmGoal.setGoal(localFoldedArmObject);
+    // addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
 
     //std::cin.get();
 
@@ -716,4 +718,10 @@ int HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::string name)
 {
     assert(!m_heuristics.empty());
     return m_heuristics[m_heuristic_map[name]]->getGoalHeuristic(state);
+}
+
+bool HeuristicMgr::isArmTuckedIn(const GraphStatePtr& state) {
+    RightContArmState r_arm = state->robot_pose().right_arm();
+    RightContArmState tucked_in_arm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+    return r_arm == tucked_in_arm;
 }

@@ -4,6 +4,8 @@
 #include <monolithic_pr2_planner/MotionPrimitives/FileParser.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/TorsoMotionPrimitive.h>
@@ -21,6 +23,7 @@ namespace monolithic_pr2_planner {
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
             std::vector<MotionPrimitivePtr> getBaseAndTorsoMotionPrims();
             std::vector<MotionPrimitivePtr> getArmMotionPrims();
+            MotionPrimitivePtr getTuckArmPrim();
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();

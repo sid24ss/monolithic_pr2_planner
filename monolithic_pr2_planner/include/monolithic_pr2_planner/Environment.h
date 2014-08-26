@@ -67,6 +67,8 @@ namespace monolithic_pr2_planner {
             int m_planner_type;
             bool m_use_new_heuristics;
 
+            std::unordered_map<int, PlanningModes::modes> m_action_partition;
+
         // SBPL interface stuff
         public:
             bool InitializeEnv(const char* sEnvFile){return false;};

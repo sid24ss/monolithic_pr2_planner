@@ -104,6 +104,7 @@ namespace monolithic_pr2_planner {
                 current_y);
             
             void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+            bool isArmTuckedIn(const GraphStatePtr& state);
 
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};

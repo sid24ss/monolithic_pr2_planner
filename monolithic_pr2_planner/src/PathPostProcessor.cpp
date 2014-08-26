@@ -126,7 +126,7 @@ std::vector<FullBodyState> PathPostProcessor::reconstructPath(
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state)
 {
-    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %ld, transition data : %ld",
+    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Original request : States : %ld, transition data : %ld",
         state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
     // index into the solution path.

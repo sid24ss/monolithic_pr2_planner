@@ -97,77 +97,82 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       }
     }
     else{
+      double w_bfsRot = 0.5;
+      double w_armFold = 0.5;
+
       switch (heuristic_id) {
         case 0:  // Anchor
           return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // ARA Heur 
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        //case 1:  // ARA Heur 
+          //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // Base1, Base2 heur
+          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
         case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+          return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
         case 3:
           if((*values).at("bfsRotFoot0")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot0") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
         case 4:
           if((*values).at("bfsRotFoot1")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot1") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
         case 5:
           if((*values).at("bfsRotFoot2")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot2") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
         case 6:
           if((*values).at("bfsRotFoot3")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot3") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
         case 7:
           if((*values).at("bfsRotFoot4")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot4") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
         case 8:
           if((*values).at("bfsRotFoot5")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot5") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
         case 9:
           if((*values).at("bfsRotFoot6")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot6") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
         case 10:
           if((*values).at("bfsRotFoot7")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot7") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
         case 11:
           if((*values).at("bfsRotFoot8")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot8") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
         case 12:
           if((*values).at("bfsRotFoot9")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot9") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
         case 13:
           if((*values).at("bfsRotFoot10")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot10") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
         case 14:
           if((*values).at("bfsRotFoot11")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot11") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
         case 15:
           if((*values).at("bfsRotFoot12")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot12") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
         case 16:
           if((*values).at("bfsRotFoot13")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot13") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
         case 17:
           if((*values).at("bfsRotFoot14")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot14") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
         case 18:
           if((*values).at("bfsRotFoot15")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot15") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
       }
     }
 
@@ -332,6 +337,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         }
     }
 }
+
 void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
                         vector<int>* costs, std::vector<bool>* isTrueCost){
     int q_id = 0;
@@ -342,19 +348,20 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
                         vector<int>* costs, std::vector<bool>* isTrueCost,
                         int q_id)
 {
+    ROS_DEBUG_NAMED(SEARCH_LOG, "expanding queue : %d", q_id);
     std::vector<MotionPrimitivePtr> current_mprims;
-    switch(q_id){
-        case 0:
-            current_mprims = m_mprims.getMotionPrims();
-            break;
-        case 1:
-        case 2:
+    switch(m_action_partition.at(q_id)){
+        case PlanningModes::BASE_ONLY:
             current_mprims = m_mprims.getBaseAndTorsoMotionPrims();
             break;
-        case 3:
+        case PlanningModes::RIGHT_ARM:
             current_mprims = m_mprims.getArmMotionPrims();
             break;
+        case PlanningModes::RIGHT_ARM_MOBILE:
+        default:
+            current_mprims = m_mprims.getMotionPrims();
     }
+
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
     succIDs->clear();
@@ -387,7 +394,7 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
     // TODO : An issue is that we might end up with an invalid state because of
     // the policy. How do we prevent this? Maybe we can collission check only
     // the policy applied state, and if it isn't valid, use the source state itself.
-    if (q_id == 3) {
+    if (m_action_partition.at(q_id) == PlanningModes::RIGHT_ARM) {
         // get the base state of the successor
         int base_x = source_state->base_x();
         int base_y = source_state->base_y();
@@ -448,6 +455,22 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
         // source_state->robot_pose().visualize(250 / NUM_SMHA_HEUR * q_id);
         // policy_applied_state->robot_pose().visualize(0);
         // std::cin.get();
+    } else if (m_action_partition.at(q_id) == PlanningModes::BASE_ONLY) {
+        bool is_tucked_in = m_heur_mgr->isArmTuckedIn(source_state);
+        if (!is_tucked_in){
+            // need to tuck arm
+            MotionPrimitivePtr tuck_arm_prim = m_mprims.getTuckArmPrim();
+            TransitionData t_data;
+            if(!tuck_arm_prim->apply(*source_state, policy_applied_state, t_data)) {
+                policy_applied_state = source_state;
+            } else {
+                edge_prims.clear();
+                edge_prims.push_back(tuck_arm_prim);
+                policy_cost = tuck_arm_prim->cost();
+            }
+        } else {
+            policy_applied_state = source_state;
+        }
     } else {
         policy_applied_state = source_state;
     }
@@ -470,6 +493,11 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
                 //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
                 continue;
             }
+            // ROS_DEBUG_NAMED(SEARCH_LOG, "non-arm mprim/source/successor");
+            // mprim->printEndCoord();
+            // source_state->printToDebug(MPRIM_LOG);
+            // successor->printToDebug(MPRIM_LOG);
+            // ROS_DEBUG_NAMED(SEARCH_LOG, "done");
         }
 
         m_hash_mgr->save(successor);
@@ -500,7 +528,7 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
     // ugly hack because in this particular case, the policy of the base-agent
     // affects the actions of the arm-agent. Thus, we want both sets of actions -
     // base-policy-applied and not.
-    if (q_id == 3) {
+    if (m_action_partition.at(q_id) == PlanningModes::RIGHT_ARM) {
         for (auto mprim : current_mprims){
             GraphStatePtr successor;
             TransitionData t_data;
@@ -563,7 +591,8 @@ int Environment::GetTrueCost(int parentID, int childID){
         total_cost += t_data.cost();
         tmp = successor;
     }
-    //mprim->printEndCoord();
+    // mprim->printEndCoord();
+    // mprim->print();
     //source_state->printToInfo(SEARCH_LOG);
     //successor->printToInfo(SEARCH_LOG);
     successor->id(m_hash_mgr->getStateID(successor));
@@ -688,6 +717,15 @@ void Environment::configurePlanningDomain(){
     // load up static pviz instance for visualizations. 
     Visualizer::createPVizInstance();
     Visualizer::setReferenceFrame(std::string("/map"));
+
+    m_action_partition.insert(
+        std::unordered_map<int,PlanningModes::modes>::value_type(0,PlanningModes::RIGHT_ARM_MOBILE));
+    m_action_partition.insert(
+        std::unordered_map<int,PlanningModes::modes>::value_type(1,PlanningModes::BASE_ONLY));
+    m_action_partition.insert(
+        std::unordered_map<int,PlanningModes::modes>::value_type(2,PlanningModes::BASE_ONLY));
+    m_action_partition.insert(
+        std::unordered_map<int,PlanningModes::modes>::value_type(3,PlanningModes::RIGHT_ARM));
 }
 
 // sets parameters for query specific things

@@ -59,7 +59,7 @@ namespace monolithic_pr2_planner {
 
     class PlanningModes {
         public:
-            enum { BASE_ONLY, 
+            enum modes { BASE_ONLY, 
                    RIGHT_ARM, 
                    LEFT_ARM, 
                    DUAL_ARM, 
@@ -67,5 +67,6 @@ namespace monolithic_pr2_planner {
                    LEFT_ARM_MOBILE, 
                    DUAL_ARM_MOBILE };
     };
+
 }
 
