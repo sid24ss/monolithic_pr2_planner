@@ -12,6 +12,7 @@
 #include <kdl/frames.hpp>
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
+#include <sbpl/utils/utils.h>
 
 
 #define NUM_MHA_BASE_HEUR 0
@@ -49,9 +50,13 @@ namespace monolithic_pr2_planner {
             void add3DHeur(std::string name, const int cost_multiplier = 1, double *gripper_radius
                 = NULL);
             void addEndEffWithRotHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier = 1);
+            void addEndEffLocalHeur(std::string name, const int cost_multiplier, GoalState eefGoalRelBody);
             void add2DHeur(std::string name, const int cost_multiplier = 1,
                             const double radius_m = 0);
             void addBaseWithRotationHeur(std::string name, const int cost_multiplier = 1);
+            void addBFS2DRotFootprint(std::string name, const int cost_multiplier, 
+                                      const double theta, const vector<sbpl_2Dpt_t>& footprintPolygon,
+                                      const double radius_m);
             void addUniformCost2DHeur(std::string name, const double
                 radius_m = 0);
             void addUniformCost3DHeur(std::string name);
@@ -68,7 +73,7 @@ namespace monolithic_pr2_planner {
             void update3DHeuristicMaps();
 
             // Updates the 2D map for the heuristics that need them
-            void update2DHeuristicMaps(const std::vector<signed char>& data);
+            void update2DHeuristicMaps(const std::vector<unsigned char>& data);
 
             // TODO: Multiple goals should just take the goal state and the heuristic ID.
             void setGoal(GoalState& state);
@@ -97,6 +102,9 @@ namespace monolithic_pr2_planner {
 
             std::pair<int,int> getBestParent(std::string heur_name, int current_x, int
                 current_y);
+            
+            void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
         inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
@@ -122,10 +130,11 @@ namespace monolithic_pr2_planner {
             std::vector<int> m_mha_heur_ids;
             int m_arm_angles_heur_id;
             int m_planner_type;
+            bool m_use_new_heuristics;
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;
-            std::vector<signed char> m_grid_data;
+            std::vector<unsigned char> m_grid_data;
 
             CSpaceMgrPtr m_cspace_mgr;
     };

@@ -83,6 +83,95 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
 
+
+    if(!m_use_new_heuristics){
+      switch (heuristic_id) {
+        case 0:  // Anchor
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // base 1
+          return values->at("base_with_rot_0");
+        case 2:  // Base1, Base2 heur
+          return values->at("base_with_rot_door");
+        case 3:
+          return values->at("admissible_endeff");
+      }
+    }
+    else{
+      switch (heuristic_id) {
+        case 0:  // Anchor
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // ARA Heur 
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 2:  // Base1, Base2 heur
+          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+        case 3:
+          if((*values).at("bfsRotFoot0")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot0") + 0.5f*(*values).at("arm_angles_folded"));
+        case 4:
+          if((*values).at("bfsRotFoot1")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot1") + 0.5f*(*values).at("arm_angles_folded"));
+        case 5:
+          if((*values).at("bfsRotFoot2")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot2") + 0.5f*(*values).at("arm_angles_folded"));
+        case 6:
+          if((*values).at("bfsRotFoot3")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot3") + 0.5f*(*values).at("arm_angles_folded"));
+        case 7:
+          if((*values).at("bfsRotFoot4")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot4") + 0.5f*(*values).at("arm_angles_folded"));
+        case 8:
+          if((*values).at("bfsRotFoot5")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot5") + 0.5f*(*values).at("arm_angles_folded"));
+        case 9:
+          if((*values).at("bfsRotFoot6")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot6") + 0.5f*(*values).at("arm_angles_folded"));
+        case 10:
+          if((*values).at("bfsRotFoot7")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot7") + 0.5f*(*values).at("arm_angles_folded"));
+        case 11:
+          if((*values).at("bfsRotFoot8")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot8") + 0.5f*(*values).at("arm_angles_folded"));
+        case 12:
+          if((*values).at("bfsRotFoot9")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot9") + 0.5f*(*values).at("arm_angles_folded"));
+        case 13:
+          if((*values).at("bfsRotFoot10")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot10") + 0.5f*(*values).at("arm_angles_folded"));
+        case 14:
+          if((*values).at("bfsRotFoot11")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot11") + 0.5f*(*values).at("arm_angles_folded"));
+        case 15:
+          if((*values).at("bfsRotFoot12")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot12") + 0.5f*(*values).at("arm_angles_folded"));
+        case 16:
+          if((*values).at("bfsRotFoot13")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot13") + 0.5f*(*values).at("arm_angles_folded"));
+        case 17:
+          if((*values).at("bfsRotFoot14")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot14") + 0.5f*(*values).at("arm_angles_folded"));
+        case 18:
+          if((*values).at("bfsRotFoot15")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot15") + 0.5f*(*values).at("arm_angles_folded"));
+      }
+    }
+
+    /*
     switch (heuristic_id) {
       case 0:  // Anchor
         return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
@@ -93,6 +182,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       case 3:
         return static_cast<int>(values->at("admissible_endeff"));
     }
+    */
 
     // switch (heuristic_id) {
     //   case 0:  // Anchor
@@ -280,87 +370,6 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
         usleep(10000);
     }
 
-    GraphStatePtr policy_applied_state;
-    std::vector<MotionPrimitivePtr> edge_prims;
-    int policy_cost = 0;
-
-    /*
-     * pre-computation for arm mprims to get the base policy
-     * the logic is to find the best parent. And iterate through the base prims
-     * to find one that matches. If nothing matches, we will use the one with 
-     * the least heuristic.
-     * The problem is that I have to use the base mprims to generate the
-     * sucessors lazily, because otherwise, when I evaluate the state,
-     * it's going to be invalid if it can't be generated by the mprims.
-     */
-
-    // TODO : An issue is that we might end up with an invalid state because of
-    // the policy. How do we prevent this? Maybe we can collission check only
-    // the policy applied state, and if it isn't valid, use the source state itself.
-    if (q_id == 3) {
-        // get the base state of the successor
-        int base_x = source_state->base_x();
-        int base_y = source_state->base_y();
-        std::pair <int,int> best_parent = m_heur_mgr->getBestParent(
-            "base_with_rot_0", base_x, base_y);
-        std::vector<MotionPrimitivePtr> base_mprims = m_mprims.getBaseAndTorsoMotionPrims();
-        ROS_DEBUG_NAMED(SEARCH_LOG, "source state : %d, %d best heur dir: %d %d",
-            base_x, base_y, best_parent.first, best_parent.second);
-        
-        bool matching_base_mprim_found = false;
-
-        // vector to store the successful prims
-        std::vector< std::pair<GraphStatePtr, MotionPrimitivePtr> > base_successors;
-
-        // iterate through and find one that matches
-        for (int i = 0; i < static_cast<int>(base_mprims.size()) 
-                            && !matching_base_mprim_found; ++i) {
-            // apply to get a new state
-            GraphStatePtr base_successor;
-            TransitionData t_data;
-            if (!base_mprims[i]->apply(*source_state, base_successor, t_data))
-                continue;
-            // unsure if required. but let's do it anyway so that it doesn't
-            // break anything downstream
-            base_successor->id(source_state->id());
-            // I have a base successor. Time to check if it matches with our
-            // best parent.
-            if (best_parent.first == base_successor->base_x() 
-                && best_parent.second == base_successor->base_y()) {
-                matching_base_mprim_found = true;
-                ROS_INFO_NAMED(SEARCH_LOG, "matching base prim found!");
-                // setting it to size() here works because we are inserting it
-                // to the end right after this statement.
-                policy_applied_state = base_successor;
-                edge_prims.clear();
-                edge_prims.push_back(base_mprims[i]);
-                policy_cost = base_mprims[i]->cost();
-            }
-            // whether it does or not, save it to the list of successors.
-            base_successors.push_back(std::make_pair(base_successor, base_mprims
-                [i]));
-        }
-        if (!matching_base_mprim_found) {
-            // too bad. Let's settle for the one that minimizes the heuristic
-            // anyway.
-            int best_heuristic = INFINITECOST;
-            for (auto state_prim_pair : base_successors) {
-                int heur = m_heur_mgr->getGoalHeuristic(state_prim_pair.first, "base_with_rot_0");
-                if (heur < best_heuristic) {
-                    best_heuristic = heur;
-                    policy_applied_state = state_prim_pair.first;
-                    edge_prims.clear();
-                    edge_prims.push_back(state_prim_pair.second);
-                    policy_cost = state_prim_pair.second->cost();
-                }
-            }
-        }
-        // source_state->robot_pose().visualize(250 / NUM_SMHA_HEUR * q_id);
-        // policy_applied_state->robot_pose().visualize(0);
-        // std::cin.get();
-    } else {
-        policy_applied_state = source_state;
-    }
     for (auto mprim : current_mprims){
         //ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         //mprim->printEndCoord();
@@ -368,15 +377,16 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
         TransitionData t_data;
 
         if (mprim->motion_type() == MPrim_Types::ARM){
-            successor.reset(new GraphState(*policy_applied_state));
+            successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
+            t_data.motion_type(mprim->motion_type());
             //ROS_INFO("source/successor");
             //mprim->printEndCoord();
-            //policy_applied_state->printToInfo(MPRIM_LOG);
+            //source_state->printToInfo(MPRIM_LOG);
             //successor->printToInfo(MPRIM_LOG);
             //ROS_INFO("done");
         } else {
-            if (!mprim->apply(*policy_applied_state, successor, t_data)){
+            if (!mprim->apply(*source_state, successor, t_data)){
                 //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
                 continue;
             }
@@ -399,44 +409,128 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
           key = Edge(sourceStateID, successor->id());
         }
 
-//        succIDs->push_back(successor->id());
-//        key = Edge(sourceStateID, successor->id());
-        std::vector<MotionPrimitivePtr> edge_generator_prims(edge_prims);
+
+        std::vector<MotionPrimitivePtr> edge_generator_prims;
         edge_generator_prims.push_back(mprim);
         m_edges.insert(map<Edge, std::vector<MotionPrimitivePtr> >::value_type(key, edge_generator_prims));
-        costs->push_back(mprim->cost() + policy_cost);
+        costs->push_back(mprim->cost());
         isTrueCost->push_back(false);
-    }
-    // ugly hack because in this particular case, the policy of the base-agent
-    // affects the actions of the arm-agent. Thus, we want both sets of actions -
-    // base-policy-applied and not.
-    if (q_id == 3) {
-        for (auto mprim : current_mprims){
-            GraphStatePtr successor;
-            TransitionData t_data;
 
-            successor.reset(new GraphState(*source_state));
-            successor->lazyApplyMPrim(mprim->getEndCoord());
+        // apply the policy here and do collission checking to see if the base
+        // state is valid
+        /*
+         * pre-computation for arm mprims to get the base policy
+         * the logic is to find the best parent. And iterate through the base prims
+         * to find one that matches. If nothing matches, we will use the one with 
+         * the least heuristic.
+         * The problem is that I have to use the base mprims to generate the
+         * sucessors lazily, because otherwise, when I evaluate the state,
+         * it's going to be invalid if it can't be generated by the mprims.
+         */
 
-            m_hash_mgr->save(successor);
+         GraphStatePtr policy_applied_state;
+         bool policy_applied = false;
+         int policy_cost = 0;
+
+        // TODO : An issue is that we might end up with an invalid state because of
+        // the policy. How do we prevent this? Maybe we can collission check only
+        // the policy applied state, and if it isn't valid, use the source state itself.
+        if (mprim->motion_type() == MPrim_Types::ARM) {  // if arm mprim
+            // get the base state of the successor
+            int base_x = source_state->base_x();
+            int base_y = source_state->base_y();
+            std::pair <int,int> best_parent = m_heur_mgr->getBestParent(
+                "base_with_rot_0", base_x, base_y);
+            std::vector<MotionPrimitivePtr> base_mprims = m_mprims.getBaseAndTorsoMotionPrims();
+            ROS_DEBUG_NAMED(SEARCH_LOG, "source state : %d, %d best heur dir: %d %d",
+                base_x, base_y, best_parent.first, best_parent.second);
+            
+            bool intermediate_state_valid = m_cspace_mgr->isValidSuccessor(*successor, t_data);
+
+            // vector to store the successful prims
+            std::vector< std::pair<GraphStatePtr, MotionPrimitivePtr> > base_successors;
+            std::vector<TransitionData> base_successors_tdata;
+            // iterate through and find one that matches
+            for (int i = 0; i < static_cast<int>(base_mprims.size()) 
+                                && !policy_applied; ++i) {
+                // apply to get a new state
+                GraphStatePtr base_successor;
+                TransitionData t_data_policy;
+                if (!base_mprims[i]->apply(*successor, base_successor, t_data_policy))
+                    continue;
+                // I have a base successor. Time to check if it matches with our
+                // best parent.
+                if (best_parent.first == base_successor->base_x() 
+                    && best_parent.second == base_successor->base_y()) {
+                    bool is_valid = intermediate_state_valid
+                                    && m_cspace_mgr->isValidSuccessor(*base_successor,t_data_policy)
+                                    && m_cspace_mgr->isValidTransitionStates(t_data_policy);
+                    if (is_valid) {
+                        policy_applied = true;
+                        ROS_INFO_NAMED(SEARCH_LOG, "matching base prim found!");
+                        edge_generator_prims.resize(1);
+                        edge_generator_prims.push_back(base_mprims[i]);
+                        policy_applied_state = base_successor;
+                        policy_cost = base_mprims[i]->cost();
+                    }
+                }
+                // whether it does or not, save it to the list of successors.
+                base_successors.push_back(std::make_pair(base_successor, base_mprims
+                    [i]));
+                base_successors_tdata.push_back(t_data_policy);
+            }
+            if (!policy_applied) {
+                // too bad. Let's settle for the one that minimizes the heuristic
+                // *and* is valid anyway.
+                int best_heuristic = INFINITECOST;
+                for (size_t i = 0; i < static_cast<int>(base_successors.size());
+                    ++i) {
+                    GraphStatePtr base_successor = base_successors[i].first;
+                    int heur = m_heur_mgr->getGoalHeuristic(base_successor, "base_with_rot_0");
+                    if (heur < best_heuristic) {
+                        TransitionData t_data_policy = base_successors_tdata[i];
+                        bool is_valid = intermediate_state_valid &&
+                                        m_cspace_mgr->isValidSuccessor(*base_successor,t_data_policy) &&
+                                        m_cspace_mgr->isValidTransitionStates(t_data_policy);
+                        if (is_valid){
+                            best_heuristic = heur;
+                            policy_applied_state = base_successor;
+                            edge_generator_prims.resize(1);
+                            edge_generator_prims.push_back(base_successors[i].second);
+                            policy_cost = base_successors[i].second->cost();
+                            policy_applied = true;
+                        }
+                    }
+                }
+            }
+            // source_state->robot_pose().visualize(250 / NUM_SMHA_HEUR * q_id);
+            // policy_applied_state->robot_pose().visualize(0);
+            // std::cin.get();
+        } else {
+            policy_applied_state = source_state;
+        }
+
+        if (policy_applied) {
+            m_hash_mgr->save(policy_applied_state);
             Edge key;
 
-            if (m_goal->isSatisfiedBy(successor)){
-              m_goal->storeAsSolnState(successor);
-              ROS_INFO("Found potential goal at: source->id %d, successor->id %d,"
-                "cost: %d, mprim type: %d ", source_state->id(), successor->id(),
+            if (m_goal->isSatisfiedBy(policy_applied_state)){
+              m_goal->storeAsSolnState(policy_applied_state);
+              //ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d",
+              // policy_applied_state->id(), mprim->cost());
+              ROS_INFO("Found potential goal at: source->id %d, policy_applied_state->id %d,"
+                "cost: %d, mprim type: %d ", source_state->id(), policy_applied_state->id(),
                   mprim->cost(), mprim->motion_type());
               succIDs->push_back(GOAL_STATE);
               key = Edge(sourceStateID, GOAL_STATE);
             } else {
-              succIDs->push_back(successor->id());
-              key = Edge(sourceStateID, successor->id());
+              succIDs->push_back(policy_applied_state->id());
+              key = Edge(sourceStateID, policy_applied_state->id());
             }
-            std::vector<MotionPrimitivePtr> edge_generator_prims;
-            edge_generator_prims.push_back(mprim);
+
             m_edges.insert(map<Edge, std::vector<MotionPrimitivePtr> >::value_type(key, edge_generator_prims));
             costs->push_back(mprim->cost() + policy_cost);
-            isTrueCost->push_back(false);
+            isTrueCost->push_back(true);
         }
     }
 }
@@ -641,4 +735,10 @@ void Environment::generateStartState(SearchRequestPtr search_request) {
     search_request->m_params->base_start = start_robot_state.getContBaseState();
     search_request->m_params->right_arm_start = start_robot_state.right_arm();
     search_request->m_params->left_arm_start = start_robot_state.left_arm();
+}
+
+void Environment::setUseNewHeuristics(bool use_new_heuristics)
+{
+    m_use_new_heuristics = use_new_heuristics;
+    m_heur_mgr->setUseNewHeuristics(m_use_new_heuristics);
 }

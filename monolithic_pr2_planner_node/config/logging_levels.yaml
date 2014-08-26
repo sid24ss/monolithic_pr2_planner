@@ -1,11 +1,11 @@
 debug:
     logging:
-        configuration: debug
+        configuration: info
         initialization: debug
         collision_space: info
         kinematics: info
         hashmanager: info
-        search: debug
+        search: info
         motionprimitives: info
         heuristics: info
         pathpostprocessor: debug
