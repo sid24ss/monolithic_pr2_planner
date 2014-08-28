@@ -267,7 +267,7 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
     double after = tv_a.tv_usec + (tv_a.tv_sec * 1000000);
     ik_time += after - before;
 
-    new_robot_pose = make_shared<RobotState>(seed_robot_pose.base_state(),
+    new_robot_pose = make_shared<RobotState>(seed_robot_pose.getContBaseState(),
                                             RightContArmState(r_angles),
                                             LeftContArmState(l_angles));
 
@@ -409,6 +409,7 @@ bool RobotState::workspaceInterpolate(const RobotState& start, const RobotState&
     } else {
         assert(interp_obj_steps.size() == static_cast<size_t>(num_interp_steps));
     }
+    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "num_interp_steps : %d", num_interp_steps);
 
     for (size_t i=0; i < interp_obj_steps.size(); i++){
         interp_obj_steps[i].printToDebug(MPRIM_LOG);

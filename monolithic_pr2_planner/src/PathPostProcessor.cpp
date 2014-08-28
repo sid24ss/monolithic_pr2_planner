@@ -101,6 +101,10 @@ std::vector<FullBodyState> PathPostProcessor::reconstructPath(
         ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "this tdata size : %lu",
             combined_tdata.interm_robot_steps().size());
         successor->id(m_hash_mgr->getStateID(successor));
+        // change the last state in the path to the actual state
+        if ((i + 1) == soln_path.size() -1) {
+            soln_path[i+1] = successor->id();
+        }
         // the successor's id for the goal state is not going to match with the
         // goal state ID (which is in real_next_successor->id())
         bool matchesEndID = (successor->id() == real_next_successor->id())
@@ -132,15 +136,15 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     size_t i = 0;
     size_t j = 1;
     
-    { // throw in the first point : NOTE: Probably not needed.
-        GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[0]);
-        final_path.push_back(PathPostProcessor::createFBState(source_state->robot_pose()));
-    }
+    // { // throw in the first point : NOTE: Probably not needed.
+    //     GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[0]);
+    //     final_path.push_back(PathPostProcessor::createFBState(source_state->robot_pose()));
+    // }
 
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
-        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Shortcutting : %lu - %lu", i, j);
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "\nShortcutting : %lu - %lu", i, j);
         // Get the two states between which we are going to try interpolating.
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
@@ -224,7 +228,6 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                 i = j - 1;
             }
         }
-        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "final path size : %lu", final_path.size());
         // std::cin.get();
     }
     if(i != state_ids.size() - 1){
@@ -233,10 +236,10 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     }
     ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Size of shortcutPath: %d",
         static_cast<int>(final_path.size()));
-    { // throw in the last point
-        GraphStatePtr soln_state = goal_state.getSolnState();
-        final_path.push_back(PathPostProcessor::createFBState(soln_state->robot_pose()));
-    }
+    // { // throw in the last point
+    //     GraphStatePtr soln_state = goal_state.getSolnState();
+    //     final_path.push_back(PathPostProcessor::createFBState(soln_state->robot_pose()));
+    // }
     return final_path;
 }
 
@@ -449,14 +452,26 @@ bool PathPostProcessor::stateInterpolate(const RobotState& start, const RobotSta
     // try workspace interpolate. This is what we prefer.
     bool interpolate = RobotState::workspaceInterpolate(start, end, &robot_states);
     if (!interpolate) {
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "falling back to jointSpaceInterpolate!");
         robot_states.clear();
         RobotState::jointSpaceInterpolate(start, end, &robot_states);
     }
 
+    // DEBUG: Visualize the robot states
+    // for (auto& state : robot_states) {
+    //     state.visualize(0);
+    //     std::cin.get();
+    // }
+
     // now we should have all the robot states. Convert them to FBStates
     interp_steps->clear();
     for (auto& state : robot_states) {
-        interp_steps->push_back(PathPostProcessor::createFBState(state));
+        FullBodyState fb_state = PathPostProcessor::createFBState(state);
+        ContBaseState cont_base = state.getContBaseState();
+        std::vector<double> base;
+        cont_base.getValues(&base);
+        fb_state.base = base;
+        interp_steps->push_back(fb_state);
     }
     return true;
 }

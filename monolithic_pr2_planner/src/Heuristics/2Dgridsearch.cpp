@@ -156,7 +156,9 @@ void SBPL2DGridSearch::destroy()
     // destroy the 2D states:
     if (searchStates2D_ != NULL) {
         for (int x = 0; x < width_; x++) {
-            delete[] searchStates2D_[x];
+            if (searchStates2D_[x] != NULL)
+                delete[] searchStates2D_[x];
+            searchStates2D_[x] = NULL;
         }
         delete[] searchStates2D_;
         searchStates2D_ = NULL;
