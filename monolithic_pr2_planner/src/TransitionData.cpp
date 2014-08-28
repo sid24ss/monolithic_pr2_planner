@@ -23,7 +23,7 @@ TransitionData TransitionData::combineTData(const TransitionData t_data1,
     }
 
     // set the intermediate robot steps
-    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "setting robot steps");
+    // ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "setting robot steps");
     std::vector<RobotState> steps(t_data1.interm_robot_steps());
     for (auto step : t_data2.interm_robot_steps()) {
         steps.push_back(step);
@@ -31,7 +31,7 @@ TransitionData TransitionData::combineTData(const TransitionData t_data1,
     t_data.interm_robot_steps(steps);
 
     // set the base steps
-    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "setting base steps");
+    // ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "setting base steps");
     std::vector<ContBaseState> base_steps(t_data1.cont_base_interm_steps());
     for (auto step : t_data2.cont_base_interm_steps()) {
         base_steps.push_back(step);
