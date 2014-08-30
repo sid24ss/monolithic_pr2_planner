@@ -15,7 +15,8 @@ RobotState StartGoalGenerator::generateRandomState(Region* region_ptr){
     while (!foundState){
         ContObjectState obj_state;
         ContBaseState base;
-        base.z(randomDouble(0.0, 0.3));
+        base.z(randomDouble(0.25, 0.3));
+        // base.z(0.3);
         obj_state.x(randomDouble(0.35, 1.2));
         obj_state.y(randomDouble(-0.6, 0.6));
         obj_state.z(randomDouble(-0.6, 0.6));

@@ -409,7 +409,6 @@ bool RobotState::workspaceInterpolate(const RobotState& start, const RobotState&
     } else {
         assert(interp_obj_steps.size() == static_cast<size_t>(num_interp_steps));
     }
-    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "num_interp_steps : %d", num_interp_steps);
 
     for (size_t i=0; i < interp_obj_steps.size(); i++){
         interp_obj_steps[i].printToDebug(MPRIM_LOG);

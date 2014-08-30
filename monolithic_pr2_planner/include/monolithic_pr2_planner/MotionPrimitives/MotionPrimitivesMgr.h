@@ -24,6 +24,7 @@ namespace monolithic_pr2_planner {
             std::vector<MotionPrimitivePtr> getBaseAndTorsoMotionPrims();
             std::vector<MotionPrimitivePtr> getArmMotionPrims();
             MotionPrimitivePtr getTuckArmPrim();
+            MotionPrimitivePtr getUntuckArmPrim(bool full_untuck);
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();

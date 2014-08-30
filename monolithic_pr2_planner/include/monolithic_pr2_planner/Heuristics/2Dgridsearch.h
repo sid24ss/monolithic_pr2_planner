@@ -87,7 +87,7 @@ public:
 
 public:
     SBPL_2DGridSearchState() { iterationaccessed = 0; parent = NULL; }
-    ~SBPL_2DGridSearchState() { }
+    ~SBPL_2DGridSearchState() { parent = NULL; }
 };
 
 /**

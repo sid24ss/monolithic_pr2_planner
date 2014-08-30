@@ -139,3 +139,9 @@ MotionPrimitivePtr MotionPrimitivesMgr::getTuckArmPrim() {
     ArmTuckMotionPrimitivePtr tuckAMP = make_shared<ArmTuckMotionPrimitive>();
     return tuckAMP;
 }
+
+MotionPrimitivePtr MotionPrimitivesMgr::getUntuckArmPrim(bool full_untuck) {
+    ArmUntuckMotionPrimitivePtr untuckAMP = 
+                            make_shared<ArmUntuckMotionPrimitive>(full_untuck);
+    return untuckAMP;
+}

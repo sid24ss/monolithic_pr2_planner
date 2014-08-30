@@ -79,8 +79,8 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     ros::NodeHandle nh;
 
     // Add the surface - these are generated only within these bounds.
-    double surfaceBoundsXMin = 6.2;
-    double surfaceBoundsXMax = 7;
+    double surfaceBoundsXMin = 7.2;
+    double surfaceBoundsXMax = 8;
     
     double surfaceBoundsYMin = 0.8;
     double surfaceBoundsYMax = 3.5;
@@ -281,7 +281,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // addCuboid(pclCloud, 5, 2, 1.6, 0.05, 1, 1.8, true);
 
     // Small table
-    addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
+    // addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
     
 
     bool addTableObstacles;

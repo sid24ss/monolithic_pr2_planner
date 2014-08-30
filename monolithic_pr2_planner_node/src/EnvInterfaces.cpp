@@ -359,7 +359,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     ph.param("use_new_heuristics",use_new_heuristics,false);
     int planner_queues;
     if(!use_new_heuristics)
-      planner_queues = 4;
+      planner_queues = NUM_SMHA_HEUR;
     else
       planner_queues = 19;
 

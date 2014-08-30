@@ -83,6 +83,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
 
+    // heuristic_id = 3;
 
     if(!m_use_new_heuristics){
       switch (heuristic_id) {
@@ -93,6 +94,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         case 2:  // Base1, Base2 heur
           return values->at("base_with_rot_door");
         case 3:
+          return values->at("base_with_rot_0");
+        case 4:
           return values->at("admissible_endeff");
       }
     }
@@ -348,6 +351,7 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
                         vector<int>* costs, std::vector<bool>* isTrueCost,
                         int q_id)
 {
+    // q_id = 4;
     ROS_DEBUG_NAMED(SEARCH_LOG, "expanding queue : %d", q_id);
     std::vector<MotionPrimitivePtr> current_mprims;
     switch(m_action_partition.at(q_id)){
@@ -380,6 +384,7 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr policy_applied_state;
     std::vector<MotionPrimitivePtr> edge_prims;
     int policy_cost = 0;
+    bool apply_only_policy = false;
 
     /*
      * pre-computation for arm mprims to get the base policy
@@ -424,10 +429,10 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
             // best parent.
             if (best_parent.first == base_successor->base_x() 
                 && best_parent.second == base_successor->base_y()) {
+                if (!m_cspace_mgr->isValidSuccessor(*base_successor, t_data))
+                    continue;
                 matching_base_mprim_found = true;
-                ROS_INFO_NAMED(SEARCH_LOG, "matching base prim found!");
-                // setting it to size() here works because we are inserting it
-                // to the end right after this statement.
+                ROS_DEBUG_NAMED(SEARCH_LOG, "matching base prim found!");
                 policy_applied_state = base_successor;
                 edge_prims.clear();
                 edge_prims.push_back(base_mprims[i]);
@@ -444,6 +449,10 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
             for (auto state_prim_pair : base_successors) {
                 int heur = m_heur_mgr->getGoalHeuristic(state_prim_pair.first, "base_with_rot_0");
                 if (heur < best_heuristic) {
+                    TransitionData t_data;
+                    t_data.motion_type(MPrim_Types::BASE);
+                    if (!m_cspace_mgr->isValidSuccessor(*state_prim_pair.first, t_data))
+                        continue;
                     best_heuristic = heur;
                     policy_applied_state = state_prim_pair.first;
                     edge_prims.clear();
@@ -451,28 +460,149 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
                     policy_cost = state_prim_pair.second->cost();
                 }
             }
+            if (best_heuristic == INFINITECOST)
+                policy_applied_state.reset(new GraphState(*source_state));
         }
         // source_state->robot_pose().visualize(250 / NUM_SMHA_HEUR * q_id);
         // policy_applied_state->robot_pose().visualize(0);
         // std::cin.get();
     } else if (m_action_partition.at(q_id) == PlanningModes::BASE_ONLY) {
-        bool is_tucked_in = m_heur_mgr->isArmTuckedIn(source_state);
-        if (!is_tucked_in){
-            // need to tuck arm
-            MotionPrimitivePtr tuck_arm_prim = m_mprims.getTuckArmPrim();
-            TransitionData t_data;
-            if(!tuck_arm_prim->apply(*source_state, policy_applied_state, t_data)) {
-                policy_applied_state = source_state;
-            } else {
-                edge_prims.clear();
-                edge_prims.push_back(tuck_arm_prim);
-                policy_cost = tuck_arm_prim->cost();
-            }
+        // BASE queues; need to apply arm policies. Can do something smart-ish
+        // here?
+        // if the heuristic is not zero yet, tuck it in.
+        int heur;
+        if (q_id == 1 || q_id == 3) {
+            heur = m_heur_mgr->getGoalHeuristic(source_state, "base_with_rot_0");
         } else {
-            policy_applied_state = source_state;
+            heur = m_heur_mgr->getGoalHeuristic(source_state, "base_with_rot_door");
         }
+        bool is_tucked_in = m_heur_mgr->isArmTuckedIn(source_state);
+        // if (heur > 0) {
+        if (q_id == 3) {
+            if (is_tucked_in) {
+                // ROS_DEBUG_NAMED(SEARCH_LOG, "Heur boundary reached and arm is tucked in");
+                // std::cin.get();
+                // need to untuck first
+                MotionPrimitivePtr untuck_arm_prim = m_mprims.getUntuckArmPrim(true);
+                MotionPrimitivePtr untuck_arm_prim_part = m_mprims.getUntuckArmPrim(false);
+                TransitionData t_data;
+                if (untuck_arm_prim->apply(*source_state, policy_applied_state,t_data)){
+                    edge_prims.clear();
+                    edge_prims.push_back(untuck_arm_prim);
+                    policy_cost = untuck_arm_prim->cost();
+                } else if (untuck_arm_prim_part->apply(*source_state, policy_applied_state,t_data)) {
+                    edge_prims.clear();
+                    edge_prims.push_back(untuck_arm_prim_part);
+                    policy_cost = untuck_arm_prim_part->cost();
+                } else {
+                    policy_applied_state.reset(new GraphState(*source_state));
+                }
+            } else {
+                policy_applied_state.reset(new GraphState(*source_state));
+                // policy here is to find some mprim that has a lower heuristic
+                // than the current state. We break when we find just one that
+                // has a lower heuristic.
+                // int current_arm_heur = m_heur_mgr->getGoalHeuristic(source_state, "admissible_endeff");
+                std::vector<MotionPrimitivePtr> arm_mprims = m_mprims.getArmMotionPrims();
+                for (auto& prim : arm_mprims) {
+                    GraphStatePtr arm_policy_applied;
+                    arm_policy_applied.reset(new GraphState(*source_state));
+                    arm_policy_applied->lazyApplyMPrim(prim->getEndCoord());
+                    ContObjectState obj_state_rel_map = arm_policy_applied->getObjectStateRelMapFromState();
+                    ContObjectState current_obj_state = source_state->getObjectStateRelMapFromState();
+                    if (ContObjectState::distance(obj_state_rel_map, m_goal->getObjectState())
+                         < ContObjectState::distance(current_obj_state, m_goal->getObjectState()))
+                    {
+                        ROS_DEBUG_NAMED(SEARCH_LOG, "Applying a straight-line arm policy.");
+                        // bam! we have a policy that reduces the distance
+                        TransitionData t_data;
+                        if (!prim->apply(*source_state, policy_applied_state, t_data))
+                            continue;
+                        // policy_applied_state = arm_policy_applied;
+                        edge_prims.clear();
+                        edge_prims.push_back(prim);
+                        policy_cost = prim->cost();
+                        if (heur == 0) {
+                            ROS_DEBUG_NAMED(SEARCH_LOG, "setting only policy");
+                            // std::cin.get();
+                            apply_only_policy = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {  // if it is q_id 1 or 2, just tuck in
+            if (!is_tucked_in){
+                // need to tuck arm
+                MotionPrimitivePtr tuck_arm_prim = m_mprims.getTuckArmPrim();
+                TransitionData t_data;
+                if(!tuck_arm_prim->apply(*source_state, policy_applied_state, t_data)) {
+                    policy_applied_state.reset(new GraphState(*source_state));
+                } else {
+                    edge_prims.clear();
+                    edge_prims.push_back(tuck_arm_prim);
+                    policy_cost = tuck_arm_prim->cost();
+                }
+            } else {
+                policy_applied_state.reset(new GraphState(*source_state));
+            }
+        }
+        // } else {
+        //     if (is_tucked_in) {
+        //         ROS_DEBUG_NAMED(SEARCH_LOG, "Heur boundary reached and arm is tucked in");
+        //         // std::cin.get();
+        //         // need to untuck first
+        //         MotionPrimitivePtr untuck_arm_prim = m_mprims.getUntuckArmPrim(true);
+        //         MotionPrimitivePtr untuck_arm_prim_part = m_mprims.getUntuckArmPrim(false);
+        //         TransitionData t_data;
+        //         if (untuck_arm_prim->apply(*source_state, policy_applied_state,t_data)){
+        //             edge_prims.clear();
+        //             edge_prims.push_back(untuck_arm_prim);
+        //             policy_cost = untuck_arm_prim->cost();
+        //         } else if (untuck_arm_prim_part->apply(*source_state, policy_applied_state,t_data)) {
+        //             edge_prims.clear();
+        //             edge_prims.push_back(untuck_arm_prim_part);
+        //             policy_cost = untuck_arm_prim_part->cost();
+        //         } else {
+        //             policy_applied_state.reset(new GraphState(*source_state));
+        //         }
+        //     } else {
+        //         policy_applied_state.reset(new GraphState(*source_state));
+        //         // policy here is to find some mprim that has a lower heuristic
+        //         // than the current state. We break when we find just one that
+        //         // has a lower heuristic.
+        //         // int current_arm_heur = m_heur_mgr->getGoalHeuristic(source_state, "admissible_endeff");
+        //         std::vector<MotionPrimitivePtr> arm_mprims = m_mprims.getArmMotionPrims();
+        //         for (auto& prim : arm_mprims) {
+        //             GraphStatePtr arm_policy_applied;
+        //             arm_policy_applied.reset(new GraphState(*source_state));
+        //             arm_policy_applied->lazyApplyMPrim(prim->getEndCoord());
+        //             ContObjectState obj_state_rel_map = arm_policy_applied->getObjectStateRelMapFromState();
+        //             ContObjectState current_obj_state = source_state->getObjectStateRelMapFromState();
+        //             if (ContObjectState::distance(obj_state_rel_map, m_goal->getObjectState())
+        //                  < ContObjectState::distance(current_obj_state, m_goal->getObjectState()))
+        //             {
+        //                 ROS_DEBUG_NAMED(SEARCH_LOG, "Applying a straight-line arm policy.");
+        //                 // bam! we have a policy that reduces the distance
+        //                 TransitionData t_data;
+        //                 if (!prim->apply(*source_state, policy_applied_state, t_data))
+        //                     continue;
+        //                 // policy_applied_state = arm_policy_applied;
+        //                 edge_prims.clear();
+        //                 edge_prims.push_back(prim);
+        //                 policy_cost = prim->cost();
+        //                 if (heur == 0) {
+        //                     ROS_DEBUG_NAMED(SEARCH_LOG, "setting only policy");
+        //                     // std::cin.get();
+        //                     apply_only_policy = true;
+        //                 }
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
     } else {
-        policy_applied_state = source_state;
+        policy_applied_state.reset(new GraphState(*source_state));
     }
     for (auto mprim : current_mprims){
         //ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
@@ -489,9 +619,15 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
             //successor->printToInfo(MPRIM_LOG);
             //ROS_INFO("done");
         } else {
-            if (!mprim->apply(*policy_applied_state, successor, t_data)){
-                //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
-                continue;
+            if (apply_only_policy) {
+                ROS_DEBUG_NAMED(SEARCH_LOG, "Whoa. Only policy?");
+                // std::cin.get();
+                successor.reset(new GraphState(*policy_applied_state));
+            } else {
+                if (!mprim->apply(*policy_applied_state, successor, t_data)){
+                    //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
+                    continue;
+                }
             }
             // ROS_DEBUG_NAMED(SEARCH_LOG, "non-arm mprim/source/successor");
             // mprim->printEndCoord();
@@ -517,23 +653,28 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
           key = Edge(sourceStateID, successor->id());
         }
 
-//        succIDs->push_back(successor->id());
-//        key = Edge(sourceStateID, successor->id());
+        // succIDs->push_back(successor->id());
+        // key = Edge(sourceStateID, successor->id());
         std::vector<MotionPrimitivePtr> edge_generator_prims(edge_prims);
-        edge_generator_prims.push_back(mprim);
+        int total_cost = policy_cost;
+        if (!apply_only_policy) {
+            edge_generator_prims.push_back(mprim);
+            total_cost += mprim->cost();
+        }
         m_edges.insert(map<Edge, std::vector<MotionPrimitivePtr> >::value_type(key, edge_generator_prims));
-        costs->push_back(mprim->cost() + policy_cost);
+        costs->push_back(total_cost);
         isTrueCost->push_back(false);
     }
     // ugly hack because in this particular case, the policy of the base-agent
     // affects the actions of the arm-agent. Thus, we want both sets of actions -
     // base-policy-applied and not.
     if (m_action_partition.at(q_id) == PlanningModes::RIGHT_ARM) {
+        ROS_DEBUG_NAMED(SEARCH_LOG, "hacky-policy for the arm queue");
         for (auto mprim : current_mprims){
-            GraphStatePtr successor;
+            GraphStatePtr successor(new GraphState(*source_state));
             TransitionData t_data;
 
-            successor.reset(new GraphState(*source_state));
+            // successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
 
             m_hash_mgr->save(successor);
@@ -602,8 +743,8 @@ int Environment::GetTrueCost(int parentID, int childID){
     // ik and all that). this call updates the stored robot pose.
     real_next_successor->robot_pose(successor->robot_pose());
 
-    bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
-    assert(matchesEndID);
+    // bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
+    // assert(matchesEndID);
 
     return total_cost;
 }
@@ -718,14 +859,16 @@ void Environment::configurePlanningDomain(){
     Visualizer::createPVizInstance();
     Visualizer::setReferenceFrame(std::string("/map"));
 
-    m_action_partition.insert(
-        std::unordered_map<int,PlanningModes::modes>::value_type(0,PlanningModes::RIGHT_ARM_MOBILE));
-    m_action_partition.insert(
-        std::unordered_map<int,PlanningModes::modes>::value_type(1,PlanningModes::BASE_ONLY));
-    m_action_partition.insert(
-        std::unordered_map<int,PlanningModes::modes>::value_type(2,PlanningModes::BASE_ONLY));
-    m_action_partition.insert(
-        std::unordered_map<int,PlanningModes::modes>::value_type(3,PlanningModes::RIGHT_ARM));
+    m_action_partition[0] = PlanningModes::RIGHT_ARM_MOBILE;
+    m_action_partition[1] = PlanningModes::BASE_ONLY;
+    m_action_partition[2] = PlanningModes::BASE_ONLY;
+    m_action_partition[3] = PlanningModes::BASE_ONLY;
+    m_action_partition[4] = PlanningModes::RIGHT_ARM;
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Action Partition map");
+    for (auto& ap : m_action_partition) {
+        ROS_DEBUG_NAMED(CONFIG_LOG, "%d queue : planning mode : %d", ap.first,
+            static_cast<int>(ap.second));
+    }
 }
 
 // sets parameters for query specific things
