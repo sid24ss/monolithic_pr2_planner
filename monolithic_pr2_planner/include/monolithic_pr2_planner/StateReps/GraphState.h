@@ -9,7 +9,8 @@ namespace monolithic_pr2_planner {
         public:
             GraphState(std::vector<double> cont_state);
             GraphState(RobotState robot_pose);
-            GraphState(DiscObjectState obj_state, RobotState robot_pose);
+            // GraphState(DiscObjectState r_obj_state, DiscObjectState l_obj_state,
+            //     RobotState robot_pose);
             // equality of graphstates is defined as:
             //      same discrete base state
             //      same discrete object state
@@ -33,23 +34,34 @@ namespace monolithic_pr2_planner {
             std::vector<int> getCoords() { return m_coord; };
             std::vector<double> getContCoords();
 
-            DiscObjectState getObjectStateRelMap() const;
-            DiscObjectState getObjectStateRelBody() const;
+            DiscObjectState getLeftObjectStateRelMap() const;
+            DiscObjectState getLeftObjectStateRelBody() const;
 
-            int obj_x(){ return m_coord[GraphStateElement::OBJ_X]; };
-            int obj_y(){ return m_coord[GraphStateElement::OBJ_Y]; };
-            int obj_z(){ return m_coord[GraphStateElement::OBJ_Z]; };
-            int obj_roll(){ return m_coord[GraphStateElement::OBJ_ROLL]; };
-            int obj_pitch(){ return m_coord[GraphStateElement::OBJ_PITCH]; };
-            int obj_yaw(){ return m_coord[GraphStateElement::OBJ_YAW]; };
-            int obj_right_fa(){ return m_coord[GraphStateElement::R_FA]; };
-            int obj_left_fa(){ return m_coord[GraphStateElement::L_FA]; };
+            DiscObjectState getRightObjectStateRelMap() const;
+            DiscObjectState getRightObjectStateRelBody() const;
+
+            int r_obj_x(){ return m_coord[GraphStateElement::R_OBJ_X]; };
+            int r_obj_y(){ return m_coord[GraphStateElement::R_OBJ_Y]; };
+            int r_obj_z(){ return m_coord[GraphStateElement::R_OBJ_Z]; };
+            int r_obj_roll(){ return m_coord[GraphStateElement::R_OBJ_ROLL]; };
+            int r_obj_pitch(){ return m_coord[GraphStateElement::R_OBJ_PITCH]; };
+            int r_obj_yaw(){ return m_coord[GraphStateElement::R_OBJ_YAW]; };
+            int r_obj_fa(){ return m_coord[GraphStateElement::R_FA]; };
+
+            int l_obj_x(){ return m_coord[GraphStateElement::L_OBJ_X]; };
+            int l_obj_y(){ return m_coord[GraphStateElement::L_OBJ_Y]; };
+            int l_obj_z(){ return m_coord[GraphStateElement::L_OBJ_Z]; };
+            int l_obj_roll(){ return m_coord[GraphStateElement::L_OBJ_ROLL]; };
+            int l_obj_pitch(){ return m_coord[GraphStateElement::L_OBJ_PITCH]; };
+            int l_obj_yaw(){ return m_coord[GraphStateElement::L_OBJ_YAW]; };
+            int l_obj_fa(){ return m_coord[GraphStateElement::L_FA]; };
+
             int base_x(){return m_coord[GraphStateElement::BASE_X]; };
             int base_y(){return m_coord[GraphStateElement::BASE_Y]; };
             int base_z(){return m_coord[GraphStateElement::BASE_Z]; };
             int base_theta(){return m_coord[GraphStateElement::BASE_THETA]; };
 
-            DiscObjectState getObjectStateRelMapFromState() ;
+            // DiscObjectState getObjectStateRelMapFromState() ;
             bool updateRobotStateFromGraphState(double r_arm, double l_arm);
 
             void updateStateFromRobotState();
@@ -57,7 +69,6 @@ namespace monolithic_pr2_planner {
         private:
             int m_id;
             RobotState m_robot_pose;
-            bool m_check_simple;
             std::vector<int> m_coord;
     };
     typedef boost::shared_ptr<GraphState> GraphStatePtr;

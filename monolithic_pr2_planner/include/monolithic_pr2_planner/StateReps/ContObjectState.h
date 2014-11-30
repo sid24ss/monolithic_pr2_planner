@@ -36,6 +36,7 @@ namespace monolithic_pr2_planner {
             static std::vector<ContObjectState> interpolate(const ContObjectState& start, 
                                                             const ContObjectState& end, 
                                                             int num_steps);
+            static int numInterpSteps(const ContObjectState& start, const ContObjectState& end);
 
             static double distance(const ContObjectState& start, const ContObjectState& end);
             static double getRPYResolution(){ return m_resolution_params.obj_rpy_resolution; };

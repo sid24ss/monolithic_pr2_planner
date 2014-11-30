@@ -202,8 +202,8 @@ std::vector<RightContArmState> RightContArmState::joint_space_interpolate(
                                     start_angles[j] + i*step_size* dTheta[j]
                                 );
         }
-        RightContArmState left_arm_state(this_step_angles);
-        interp_states.push_back(left_arm_state);
+        RightContArmState right_arm_state(this_step_angles);
+        interp_states.push_back(right_arm_state);
     }
     return interp_states;
 }

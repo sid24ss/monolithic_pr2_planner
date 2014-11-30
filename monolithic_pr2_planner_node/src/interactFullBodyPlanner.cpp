@@ -220,7 +220,7 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
       base[2] = tf::getYaw(feedback->pose.orientation);
       string ns( is_start ? "start" : "goal" );
       int color = is_start ? 85 : 0;
-      pviz.visualizeRobot(*angles0, angles1, base, torso_z, color, ns, 0, false);
+      pviz.visualizeRobot(*angles0, angles1, base, torso_z, color, ns, 0, true);
       
       //snap the interative gripper marker back on the pr2 in the last valid pose
       visualization_msgs::InteractiveMarker r_gripper_marker;
@@ -294,7 +294,8 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
         base[2] = tf::getYaw(base_marker.pose.orientation);
         string ns( is_start ? "start" : "goal" );
         int color = is_start ? 85 : 0;
-        pviz.visualizeRobot(*angles0, angles1, base, torso_z, color, ns, 0, false);
+        pviz.visualizeRobot(*angles0, angles1, base, torso_z, color, ns, 0,
+          true);
         r_gripper_marker.controls[0].markers[0].color.r = 0;
         r_gripper_marker.controls[0].markers[0].color.g = 1;
         r_gripper_marker.controls[0].markers[0].color.b = 0;

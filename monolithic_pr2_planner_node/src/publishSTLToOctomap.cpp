@@ -79,8 +79,8 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     ros::NodeHandle nh;
 
     // Add the surface - these are generated only within these bounds.
-    double surfaceBoundsXMin = 6.2;
-    double surfaceBoundsXMax = 7;
+    double surfaceBoundsXMin = 4;
+    double surfaceBoundsXMax = 5;
     
     double surfaceBoundsYMin = 0.8;
     double surfaceBoundsYMax = 3.5;
@@ -89,7 +89,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     double surfaceSizeXMin = 0.65;
 
     double surfaceSizeYMax = 1.3;
-    double surfaceSizeYMin = 0.65;
+    double surfaceSizeYMin = 1.0;
 
     double surfaceSizeZ = 0.8;
     
@@ -274,15 +274,17 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // addCuboid(pclCloud, 5.348199056716729, 2.1079581496994748, 0.8, 0.1, 0.2, 0.3,true);
     
     // Doorway
-    addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
-    addCuboid(pclCloud, 5, 2.85, 0, 0.05, 2.2, 1.8, true);
-    addCuboid(pclCloud, 5, 2.85, 0, 1.00, 0.05, 1.8, true);
+    // addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
+    // addCuboid(pclCloud, 5, 2.85, 0, 0.05, 2.2, 1.8, true);
+    // addCuboid(pclCloud, 5, 2.85, 0, 1.00, 0.05, 1.8, true);
     // head of doorway; don't add this.
     // addCuboid(pclCloud, 5, 2, 1.6, 0.05, 1, 1.8, true);
 
     // Small table
-    addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
-    
+    // addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
+
+    addCuboid(pclCloud, 1.2, 0.5, 0, 1, 1, 0.4, false);
+
 
     bool addTableObstacles;
     ph.param("addTableObstacles",addTableObstacles,false);

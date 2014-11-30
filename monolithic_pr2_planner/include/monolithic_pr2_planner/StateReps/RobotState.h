@@ -17,7 +17,9 @@ namespace monolithic_pr2_planner {
 
             RobotState(){};
             RobotState(ContBaseState base_state, RightContArmState r_arm, LeftContArmState l_arm);
-            RobotState(ContBaseState base_state, ContObjectState object_state);
+            // RobotState(ContBaseState base_state, ContObjectState object_state);
+            RobotState(ContBaseState base_state, ContObjectState r_c_obj_state,
+                ContObjectState l_c_obj_state);
             DiscBaseState base_state() const;
             ContBaseState getContBaseState() const { return m_base_state; };
             RightContArmState right_arm() const { return m_right_arm; };
@@ -39,14 +41,25 @@ namespace monolithic_pr2_planner {
             static void setPlanningMode(int planning_mode){ m_planning_mode = planning_mode; };
             void visualize(int hue = 240);
 
-            ContObjectState getObjectStateRelMap() const;
-            ContObjectState getObjectStateRelMap(ContBaseState base) const;
-            DiscObjectState getObjectStateRelBody() const;
+            ContObjectState getLeftObjectStateRelMap() const;
+            ContObjectState getLeftObjectStateRelMap(ContBaseState base) const;
+            DiscObjectState getLeftObjectStateRelBody() const;
+            
+            ContObjectState getRightObjectStateRelMap() const;
+            ContObjectState getRightObjectStateRelMap(ContBaseState base) const;
+            DiscObjectState getRightObjectStateRelBody() const;
 
-            static bool computeRobotPose(const DiscObjectState& disc_obj_state,
+            // static bool computeRobotPose(const DiscObjectState& disc_obj_state,
+            //                              const RobotState& robot_pose,
+            //                              boost::shared_ptr<RobotState>& new_robot_pose,
+            //                              bool free_angle_search=false);
+
+            static bool computeRobotPose(const DiscObjectState& disc_r_obj_state,
+                                         const DiscObjectState& disc_l_obj_state,
                                          const RobotState& robot_pose,
                                          boost::shared_ptr<RobotState>& new_robot_pose,
                                          bool free_angle_search=false);
+
             static bool workspaceInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<RobotState>* interp_steps);
             static bool jointSpaceInterpolate(const RobotState& start,
@@ -65,7 +78,8 @@ namespace monolithic_pr2_planner {
             ContBaseState m_base_state;
             RightContArmState m_right_arm;
             LeftContArmState m_left_arm;
-            DiscObjectState m_obj_state; // this is in BODY frame!
+            DiscObjectState m_left_obj_state; // this is in BODY frame!
+            DiscObjectState m_right_obj_state; // this is in BODY frame!
     };
     typedef boost::shared_ptr<RobotState> RobotPosePtr;
 }

@@ -1,4 +1,5 @@
 #include <monolithic_pr2_planner/StateReps/ContObjectState.h>
+#include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 #include <tf/LinearMath/Transform.h>
 #include <tf/transform_datatypes.h>
 #include <angles/angles.h>
@@ -112,4 +113,21 @@ double ContObjectState::distance(const ContObjectState& start, const ContObjectS
     double dY = end.y() - start.y();
     double dZ = end.z() - start.z();
     return pow((pow(dX,2) + pow(dY,2) + pow(dZ,2)),.5);
+}
+
+int ContObjectState::numInterpSteps(const ContObjectState& start_obj, const
+  ContObjectState& end_obj)
+{
+    double droll = shortest_angular_distance(start_obj.roll(), end_obj.roll());
+    double dpitch = shortest_angular_distance(start_obj.pitch(), end_obj.pitch());
+    double dyaw = shortest_angular_distance(start_obj.yaw(), end_obj.yaw());
+    double d_rot = max(fabs(droll), fabs(dpitch));
+    d_rot = max(d_rot, fabs(dyaw));
+
+    double d_object = ContObjectState::distance(start_obj, end_obj);
+    int rot_steps = static_cast<int>(d_rot/ContObjectState::getRPYResolution());
+    int dist_steps = static_cast<int>(d_object/ContBaseState::getXYZResolution());
+
+    int num_interp_steps = max(rot_steps, dist_steps);
+    return num_interp_steps;
 }
