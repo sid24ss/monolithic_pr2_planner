@@ -3,12 +3,8 @@
 #include <monolithic_pr2_planner_node/fbp_stat_writer.h>
 #include <sbpl/planners/mha_planner.h>
 
-enum MenuItems{PLAN_IMHA_ROUND_ROBIN=1,
-               PLAN_IMHA_META_A_STAR,
-               PLAN_IMHA_DTS,
-               PLAN_SMHA_ROUND_ROBIN,
-               PLAN_SMHA_META_A_STAR,
-               PLAN_SMHA_DTS,
+enum MenuItems{ADD_GOAL,
+               SEND_GOALS,
                INTERRUPT,
                WRITE_TO_FILE};
 
@@ -39,12 +35,7 @@ void ControlPlanner::callPlanner(){
 
 void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   if(feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT){
-    if(feedback->menu_entry_id == MenuItems::PLAN_IMHA_ROUND_ROBIN ||
-       feedback->menu_entry_id == MenuItems::PLAN_IMHA_META_A_STAR ||
-       feedback->menu_entry_id == MenuItems::PLAN_IMHA_DTS ||
-       feedback->menu_entry_id == MenuItems::PLAN_SMHA_ROUND_ROBIN ||
-       feedback->menu_entry_id == MenuItems::PLAN_SMHA_META_A_STAR ||
-       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS){
+    if(ADD_GOAL){
 
       visualization_msgs::InteractiveMarker start_base_marker;
       int_marker_server->get("start_base",start_base_marker);
@@ -70,7 +61,9 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
       req.start.pose = start_hand_marker.pose;
       req.rarm_start = start_angles0;
       req.larm_start = angles1;
-      req.goal.pose = goal_hand_marker.pose;
+      geometry_msgs::PoseStamped goal_pose;
+      goal_pose.pose = goal_hand_marker.pose;
+      req.goal.push_back(goal_pose);
       req.body_start = start_base;
       req.rarm_goal = goal_angles0;
       req.larm_goal = angles1;

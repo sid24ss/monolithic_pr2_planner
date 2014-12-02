@@ -82,6 +82,8 @@ namespace monolithic_pr2_planner {
             // Get the heuristic value
             void getGoalHeuristic(const GraphStatePtr& state,
                 std::unique_ptr<stringintmap>& values);
+            int getGoalHeuristic(const GraphStatePtr& state, std::string
+                heur_name, bool right_arm = true);
 
             // MHA stuff
 

@@ -59,7 +59,7 @@ bool MotionPrimitiveFileParser::parseArmMotionPrimitives(string filename,
             motion[GraphStateElement::R_OBJ_PITCH] = coord[4];
             motion[GraphStateElement::R_OBJ_YAW] = coord[5];
             motion[GraphStateElement::R_FA] = coord[6];
-            motion[GraphStateElement::L_FA] = coord[7];
+            motion[GraphStateElement::L_FA] = 0;
         } else {
             motion[GraphStateElement::L_OBJ_X] = coord[0];
             motion[GraphStateElement::L_OBJ_Y] = coord[1];
@@ -67,7 +67,7 @@ bool MotionPrimitiveFileParser::parseArmMotionPrimitives(string filename,
             motion[GraphStateElement::L_OBJ_ROLL] = coord[3];
             motion[GraphStateElement::L_OBJ_PITCH] = coord[4];
             motion[GraphStateElement::L_OBJ_YAW] = coord[5];
-            motion[GraphStateElement::R_FA] = coord[6];
+            motion[GraphStateElement::R_FA] = 0;
             motion[GraphStateElement::L_FA] = coord[7];
         }
 

@@ -16,7 +16,7 @@ float64[] larm_goal
 float64[] body_goal
 
 # goal
-geometry_msgs/PoseStamped goal
+geometry_msgs/PoseStamped[] goal
 
 # tolerance
 float64 xyz_tolerance

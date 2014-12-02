@@ -53,7 +53,7 @@ rosbuild_add_executable(stlToOctomap src/publishSTLToOctomap.cpp)
 # rosbuild_add_executable(run_sim_file src/runSimulationFromFile.cpp)
 # rosbuild_add_executable(run_demo src/run_demo.cpp)
 
-rosbuild_add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
+# rosbuild_add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
 # rosbuild_add_executable(runTests src/run_tests.cpp)
 # rosbuild_add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
 

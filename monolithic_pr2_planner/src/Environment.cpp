@@ -77,24 +77,34 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     if(stateID == GOAL_STATE){
         return 0;
     }
-    std::unique_ptr<stringintmap> values;
-    m_heur_mgr->getGoalHeuristic(successor, values);
+    // std::unique_ptr<stringintmap> values;
+    // m_heur_mgr->getGoalHeuristic(successor, values);
     
-    for (auto& heur : (*values)) {
-        ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
-    }
+    // for (auto& heur : (*values)) {
+    //     ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
+    // }
 
-
+    int heur = 0;
     switch(heuristic_id) {
         case 1:
-            return values->at("rarm_heur");
+            if (m_goal->getRightObjectState()){
+                heur = m_heur_mgr->getGoalHeuristic(successor, "rarm_heur",
+                    true);
+            }
+            else
+                heur = 0;
         case 2:
-            return values->at("larm_heur");
+            if (m_goal->getLeftObjectState())
+                heur = m_heur_mgr->getGoalHeuristic(successor, "larm_heur",
+                    false);
+            else
+                heur = 0;
         default:
-            return std::max(values->at("rarm_heur"), values->at("larm_heur"));
+            heur = std::max(m_heur_mgr->getGoalHeuristic(successor, "rarm_heur",
+                    true), m_heur_mgr->getGoalHeuristic(successor, "larm_heur",
+                    false));
     }
-
-    return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
+    return heur;
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -126,6 +136,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         usleep(5000);
     }
 
+    // get the correct set of actions.
     std::vector<MotionPrimitivePtr> mprims;
     bool right_arm = true;
     if (q_id == 1) { // right arm
@@ -139,10 +150,9 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         mprims = m_mprims.getMotionPrims();
     }
 
-    // get the right set of actions.
     for (auto mprim : mprims) {
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
-        // mprim->printEndCoord();
+        mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data, right_arm)) {
@@ -173,6 +183,10 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             //successor->robot_pose().visualize();
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
+        // ROS_DEBUG_NAMED(SEARCH_LOG, "q_id : %d, right_arm : %d", q_id,
+        //     right_arm);
+        // successor->robot_pose().visualize(250/NUM_SMHA_HEUR*q_id);
+        // std::cin.get();
     }
 }
 

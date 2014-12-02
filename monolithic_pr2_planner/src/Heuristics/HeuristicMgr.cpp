@@ -20,115 +20,6 @@
 using namespace monolithic_pr2_planner;
 using namespace boost;
 
-// typedef pair<int, int> Point;
-
-// bool pairCompare(const std::pair<double, Point>& firstElem,
-//                  const std::pair<double, Point>& secondElem) {
-//     return firstElem.first < secondElem.first;
-// }
- 
-// void deletePoint(Point end_pt, vector<int>& circle_x, vector<int>& circle_y) 
-// {
-//     for (size_t i=0; i < circle_x.size(); i++){
-//         if (circle_x[i] == end_pt.first && circle_y[i] == end_pt.second){
-//             circle_x.erase(circle_x.begin()+i);
-//             circle_y.erase(circle_y.begin()+i);
-//             return;
-//         }
-//     }
-// }
- 
-// std::vector<Point> sample_points(int radius, int center_x, int center_y,
-//                   vector<int> circle_x, vector<int> circle_y, int num_p = 2)
-// {
-//     double itr = 0;
-//     vector<Point> full_circle;
-//     while (itr < 2*M_PI){
-//         Point point(radius * cos(itr) + center_x, radius * sin(itr) + center_y);
-//         itr += .1;
-//         full_circle.push_back(point);
-//     }
-//     vector<pair<double, Point> > distances;
-//     for (unsigned int i=0; i < full_circle.size(); i++){
-//         double min_dist = 100000000;
-//         Point closest_point;
-//         for (unsigned int j=0; j < circle_x.size(); j++){
-//             double dist = pow(pow((circle_x[j]-full_circle[i].first),2) +
-//                            pow((circle_y[j]-full_circle[i].second),2),.5);
-//             if (dist < min_dist){
-//                 min_dist = dist;
-//                 Point this_pt(circle_x[j], circle_y[j]);
-//                 closest_point = this_pt;
-//             }
-//         }
-//         distances.push_back(pair<double, Point>(min_dist, closest_point));
-//     }
-//     std::sort(distances.begin(), distances.end(), pairCompare);
-//     int first_pt_idx=0;
-//     while (distances[first_pt_idx].first < 3){
-//         first_pt_idx++;
-//     }
-//     Point pt = distances[first_pt_idx].second;
-//     deletePoint(pt, circle_x, circle_y);
-//     vector<Point> sorted_pts;
-//     sorted_pts.push_back(pt);
-//     while (circle_x.size()){
-//         double min_dist = 100000;
-//         int delete_id = -1;
-//         for (size_t i=0; i < circle_x.size(); i++){
-//             double dist = pow(pow((circle_x[i]-pt.first),2) +
-//                            pow((circle_y[i]-pt.second),2),.5);
-//             if (dist < min_dist){
-//                 min_dist = dist;
-//                 delete_id = i;
-//             }
-//         }
-//         sorted_pts.push_back(Point(circle_x[delete_id], circle_y[delete_id]));
-//         pt = Point(circle_x[delete_id], circle_y[delete_id]);
-//         deletePoint(pt, circle_x, circle_y);
-//     }
-//     int i = sorted_pts.size()/(num_p + 1);
-//     std::vector<Point> final_points;
-//     for (size_t k = 1; static_cast<int>(final_points.size()) < num_p; ++k)
-//     {
-//         final_points.push_back(sorted_pts[k*i]);
-//     }
-//     return final_points;
-// }
-
-// Point get_approach_point(int center_x, int center_y, std::vector<int> circle_x,
-//     std::vector<int> circle_y, double goal_yaw) {
-//     // The idea is to loop through the valid points on the circle and find the
-//     // one that has the minimum angular distance to the center from the goal.
-//     // In other words, we want the robot to be facing the same way as the goal, and
-//     // not just facing the goal.
-//     int min_idx = -1;
-//     double min_angular_distance = 2*M_PI;
-//     assert(circle_x.size());
-//     assert(circle_y.size());
-
-//     for (size_t idx = 0; idx < circle_x.size(); ++idx) {
-//         // angle that the current point makes with the center of the goal.
-//         double angle_with_goal = normalize_angle_positive(std::atan2(
-//             static_cast<double>(center_y - circle_y[idx]),
-//             static_cast<double>(center_x - circle_x[idx])));
-//         // We want the distance of this with the yaw of the original goal.
-//         double angular_distance = std::fabs(
-//             shortest_angular_distance(
-//                 goal_yaw,
-//                 angle_with_goal
-//                 )
-//             );
-//         // ROS_DEBUG_NAMED(HEUR_LOG, "Point : %d %d, angular_distance: %f",
-//         //     circle_x[idx], circle_y[idx], angular_distance);
-//         if (angular_distance < min_angular_distance) {
-//             min_angular_distance = angular_distance;
-//             min_idx = idx;
-//         }
-//     }
-//     return Point(circle_x[min_idx], circle_y[min_idx]);
-// }
-
 HeuristicMgr::HeuristicMgr() : 
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
@@ -198,23 +89,6 @@ void HeuristicMgr::initializeHeuristics() {
         // resolution in mm :
     }
 
-    // Already in mm.
-    // {
-    //     int cost_multiplier = 1;
-    //     double radius_around_goal = 0.60; //0.75;
-    //     add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
-    // }
-
-    // {
-    //     int cost_multiplier = 1;
-    //     KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
-    //     addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
-    // }
-
-    // {
-    //     int cost_multiplier = 1;
-    //     addVoronoiOrientationHeur("voronoi_heur", cost_multiplier);
-    // }
 }
 
 void HeuristicMgr::add3DHeur(std::string name, const int cost_multiplier, double* gripper_radius) {
@@ -232,46 +106,6 @@ void HeuristicMgr::add3DHeur(std::string name, const int cost_multiplier, double
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-// void HeuristicMgr::addEndEffWithRotHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier) {
-//     // Initialize the new heuristic.
-//     BFS3DWithRotationHeuristicPtr new_endeff_with_rot_heur =
-//     make_shared<BFS3DWithRotationHeuristic>();
-//     // MUST set the cost multiplier here. If not, it is taken as 1.
-//     new_endeff_with_rot_heur->setCostMultiplier(cost_multiplier);
-
-//     new_endeff_with_rot_heur->update3DHeuristicMap();
-//     new_endeff_with_rot_heur->setDesiredOrientation(desired_orientation);
-//     // Add it to the list of heuristics
-//     m_heuristics.push_back(new_endeff_with_rot_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addEndEffOnlyRotationHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier) {
-//     // Initialize the new heuristic.
-//     EndEffOnlyRotationHeuristicPtr new_endeff_only_rot_heur =
-//     make_shared<EndEffOnlyRotationHeuristic>();
-
-//     // MUST set the cost multiplier here. If not, it is taken as 1.
-//     new_endeff_only_rot_heur->setCostMultiplier(cost_multiplier);
-
-//     new_endeff_only_rot_heur->update3DHeuristicMap();
-//     new_endeff_only_rot_heur->setDesiredOrientation(desired_orientation);
-
-//     // Add it to the list of heuristics
-//     m_heuristics.push_back(new_endeff_only_rot_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addEndEffLocalHeur(std::string name, const int cost_multiplier, GoalState eefGoalRelBody){
-//     EndEffLocalHeuristicPtr heur = make_shared<EndEffLocalHeuristic>();
-//     heur->setCostMultiplier(cost_multiplier);
-//     heur->setGoal(eefGoalRelBody);
-  
-//     // Add it to the list of heuristics
-//     m_heuristics.push_back(heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
 void HeuristicMgr::addUniformCost3DHeur(std::string name){
 
     // Initialize the new heuristic.
@@ -282,94 +116,6 @@ void HeuristicMgr::addUniformCost3DHeur(std::string name){
     m_heuristics.push_back(new_3d_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
-
-// int HeuristicMgr::addEndEffHeur(const int cost_multiplier){
-
-//     // Initialize the new heuristic.
-//     AbstractHeuristicPtr new_end_eff_heur = make_shared<EndEffectorHeuristic>();
-//     // MUST set the cost multiplier here. If not, it is taken as 1.
-//     new_end_eff_heur->setCostMultiplier(cost_multiplier);
-//     // Add it to the list of heuristics
-//     m_heuristics.push_back(new_end_eff_heur);
-//     return m_heuristics.size() - 1;
-// }
-
-// void HeuristicMgr::add2DHeur(std::string name, const int cost_multiplier, const double radius_m){
-//     // Initialize the new heuristic
-//     AbstractHeuristicPtr new_2d_heur = make_shared<BFS2DHeuristic>();
-//     // Set cost multiplier here.
-//     new_2d_heur->setCostMultiplier(cost_multiplier);
-//     new_2d_heur->setRadiusAroundGoal(radius_m);
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(new_2d_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addUniformCost2DHeur(std::string name, const double radius_m){
-//     // Initialize the new heuristic
-//     BFS2DHeuristicPtr new_ucs_heur = make_shared<BFS2DHeuristic>();
-//     // Set cost multiplier here.
-//     new_ucs_heur->setCostMultiplier(1);
-//     new_ucs_heur->setRadiusAroundGoal(radius_m);
-//     new_ucs_heur->setUniformCostSearch(true);
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(new_ucs_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addBaseWithRotationHeur(std::string name, const int cost_multiplier){
-//     // Initialize the new heuristic
-//     AbstractHeuristicPtr new_base_with_rot_heur = make_shared<BaseWithRotationHeuristic>();
-//     // Set cost multiplier here.
-//     new_base_with_rot_heur->setCostMultiplier(cost_multiplier);
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(new_base_with_rot_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multiplier, 
-//                                         const double theta, const vector<sbpl_2Dpt_t>& footprintPolygon,
-//                                         const double radius_m){
-//     // Initialize the new heuristic
-//     BFS2DRotFootprintHeuristicPtr heur = make_shared<BFS2DRotFootprintHeuristic>();
-//     // Set cost multiplier here.
-//     heur->setCostMultiplier(cost_multiplier);
-//     // set the footprint
-//     heur->setFootprint(footprintPolygon, theta);
-//     heur->setRadiusAroundGoal(radius_m);
-//     heur->update2DHeuristicMap(m_grid_data);
-//     heur->setGoal(m_goal);
-
-//     static bool draw = true;
-//     if(draw){
-//       draw = false;
-//       heur->draw();
-//     }
-
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-// void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
-//     // Initialize the new heuristic
-//     VoronoiOrientationHeuristicPtr new_voronoi_heur = make_shared<VoronoiOrientationHeuristic>();
-//     // Set cost multiplier here.
-//     new_voronoi_heur->setCostMultiplier(cost_multiplier);
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(new_voronoi_heur);
-//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-// }
-
-//int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
-//  // Initialize the new heuristic
-//  ArmAnglesHeuristicPtr new_arm_angles_heur = make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
-//  // Set cost multiplier here.
-//  new_arm_angles_heur->setCostMultiplier(cost_multiplier);
-//  // Add to the list of heuristics
-//  m_heuristics.push_back(new_arm_angles_heur);
-//  return m_heuristics.size() - 1;
-//}
 
 // most heuristics won't need both 2d and 3d maps. however, the abstract
 // heuristic type has function stubs for both of them so we don't need to pick
@@ -437,6 +183,12 @@ void HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::unique_ptr<
         (*values)[heur.first] = m_heuristics[heur.second]->getGoalHeuristic(state);
         // values[i] = m_heuristics[i]->getGoalHeuristic(state);
     }
+}
+
+int HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::string
+                heur_name, bool right_arm)
+{
+    return m_heuristics[m_heuristic_map.at(heur_name)]->getGoalHeuristic(state, right_arm);
 }
 
 // bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){

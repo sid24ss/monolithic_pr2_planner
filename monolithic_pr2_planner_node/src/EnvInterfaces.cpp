@@ -301,7 +301,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     ros::NodeHandle ph("~");
     // bool use_new_heuristics;
     // ph.param("use_new_heuristics",use_new_heuristics,false);
-    int planner_queues = 2;
+    int planner_queues = 3;
     // if(!use_new_heuristics)
     //   planner_queues = 4;
     // else
@@ -445,7 +445,9 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
     // TODO: greedy algorithm
     // set the object goal for each arm.
-    search_request->r_obj_goal= std::make_shared<ContObjectState>(req.goal);
+    assert(req.goal.size() == 2);
+    // search_request->r_obj_goal= std::make_shared<ContObjectState>(req.goal[0]);
+    search_request->l_obj_goal= std::make_shared<ContObjectState>(req.goal[1]);
     search_request->r_obj_start = ContObjectState(req.start);
 
     res.stats_field_names.resize(18);

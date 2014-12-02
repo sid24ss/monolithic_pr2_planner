@@ -110,7 +110,8 @@ bool GoalState::isPartiallySatisfiedBy(const GraphStatePtr& graph_state)
     right_arm = false;
     bool l_within_xyz = withinXYZTol(graph_state, right_arm);
     bool l_within_rpy = withinRPYTol(graph_state, right_arm);
-
+    ROS_DEBUG_NAMED(SEARCH_LOG, "l_within_xyz : %d, l_within_rpy : %d",
+      l_within_xyz, l_within_rpy);
     return ((r_within_xyz && r_within_rpy) || (l_within_xyz && l_within_rpy));
 }
 
