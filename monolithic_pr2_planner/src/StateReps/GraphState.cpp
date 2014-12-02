@@ -236,7 +236,7 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     bool ik_success = true;
     RobotPosePtr new_robot_pose;
     time += (clock()-temptime)/(double)CLOCKS_PER_SEC;
-    ContObjectState tmp1(obj_state);
+    // ContObjectState tmp1(obj_state);
 
     ik_success = RobotState::computeRobotPose(r_obj_state, l_obj_state,
                                             m_robot_pose, new_robot_pose);

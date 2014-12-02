@@ -109,7 +109,7 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
 
     bool onlyBaseMotion = (t_data.motion_type() == MPrim_Types::BASE ||
                            t_data.motion_type() == MPrim_Types::BASE_ADAPTIVE);
-    bool onlyArmMotion = (t_data.motion_type() == MPrim_Types::ARM ||
+    bool onlyArmMotion = (t_data.motion_type() == MPrim_Types::RARM ||
                           t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE);
     if (onlyBaseMotion){
         return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
@@ -162,7 +162,7 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
                 debug)){
                 return false;
             }
-        } else if (t_data.motion_type() == MPrim_Types::ARM) {
+        } else if (t_data.motion_type() == MPrim_Types::RARM) {
             ROS_DEBUG_NAMED(CSPACE_LOG, "skipping the intermediate points for arms because there are none.");
         } else if (t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE) {
             BodyPose body_pose = robot_state.getContBaseState().body_pose();

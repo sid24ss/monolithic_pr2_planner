@@ -20,7 +20,7 @@ bool SearchRequest::isValid(CSpaceMgrPtr& cspace){
         return false;
     }
     if (m_params->planning_mode < 0 ||
-        m_params->planning_mode > PlanningModes::DUAL_ARM_MOBILE){
+        m_params->planning_mode > PlanningModes::TWO_ARM){
         ROS_ERROR_NAMED(INIT_LOG, "Planning mode specified doesn't make sense: %d",
                         m_params->planning_mode);
         return false;
@@ -38,7 +38,14 @@ bool SearchRequest::isValid(CSpaceMgrPtr& cspace){
 }
 
 GoalStatePtr SearchRequest::createGoalState(){
-    return boost::make_shared<GoalState>(m_params->obj_goal,
+    std::shared_ptr<DiscObjectState> r_goal;
+    std::shared_ptr<DiscObjectState> l_goal;
+    if (m_params->r_obj_goal)
+        r_goal = std::make_shared<DiscObjectState>(*m_params->r_obj_goal);
+    if (m_params->l_obj_goal)
+        l_goal = std::make_shared<DiscObjectState>(*m_params->l_obj_goal);
+    return boost::make_shared<GoalState>(r_goal,
+                                         l_goal,
                                          m_params->xyz_tolerance,
                                          m_params->roll_tolerance,
                                          m_params->pitch_tolerance,

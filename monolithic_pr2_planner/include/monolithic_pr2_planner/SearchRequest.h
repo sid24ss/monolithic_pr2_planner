@@ -16,8 +16,10 @@ namespace monolithic_pr2_planner {
         double roll_tolerance;
         double pitch_tolerance;
         double yaw_tolerance;
-        ContObjectState obj_start;
-        ContObjectState obj_goal;
+        ContObjectState r_obj_start;
+        ContObjectState l_obj_start;
+        std::shared_ptr<ContObjectState> r_obj_goal;
+        std::shared_ptr<ContObjectState> l_obj_goal;
         ContBaseState base_start;
         ContBaseState base_goal;
         LeftContArmState left_arm_start;

@@ -1,6 +1,6 @@
 #pragma once
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
-#include <monolithic_pr2_planner/StateReps/GoalState.h>
+#include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <memory>
 #include <kdl/frames.hpp>
@@ -16,8 +16,9 @@ namespace monolithic_pr2_planner {
             AbstractHeuristic() : m_cost_multiplier(1) {};
 
             // The function that has to return the heuristic value at the queried graph state
-            virtual int getGoalHeuristic(GraphStatePtr state) = 0;
-            virtual void setGoal(GoalState& state) = 0;
+            virtual int getGoalHeuristic(GraphStatePtr state, bool right_arm =
+                true) = 0;
+            virtual void setGoal(DiscObjectState& state) = 0;
 
             // For 3D heuristics that need the obstacles - this function has to be implemented for the heuristic to receive the call for obstacle grid update.
             virtual void update3DHeuristicMap() {};

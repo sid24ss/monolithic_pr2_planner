@@ -26,7 +26,8 @@ void BaseMotionPrimitive::print() const {
  */
 bool BaseMotionPrimitive::apply(const GraphState& source_state, 
                            GraphStatePtr& successor,
-                           TransitionData& t_data){
+                           TransitionData& t_data,
+                           bool right_arm){
     // skip irrelevant angles
     if (source_state.robot_pose().base_state().theta() != start_angle()){
         return false;

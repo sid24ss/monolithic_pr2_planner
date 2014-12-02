@@ -11,7 +11,8 @@ namespace monolithic_pr2_planner {
             TorsoMotionPrimitive(int vertical_direction);
             virtual bool apply(const GraphState& graph_state, 
                                GraphStatePtr& successor,
-                               TransitionData& t_data);
+                               TransitionData& t_data,
+                               bool right_arm = true);
             virtual void print() const;
             virtual int motion_type() const { return MPrim_Types::TORSO; }; 
             virtual void computeCost(const MotionPrimitiveParams& params);

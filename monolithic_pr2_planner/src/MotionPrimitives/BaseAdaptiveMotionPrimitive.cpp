@@ -116,7 +116,8 @@ bool BaseAdaptiveMotionPrimitive::moveObjToGoalPositionUsingBase(const GraphStat
 
 bool BaseAdaptiveMotionPrimitive::apply(const GraphState& source_state, 
                                          GraphStatePtr& successor,
-                                         TransitionData& t_data){
+                                         TransitionData& t_data,
+                                         bool right_arm){
     DiscObjectState d_goal = m_goal.getObjectState();
     ContObjectState c_goal = m_goal.getObjectState();
     ContObjectState cur_obj_state = source_state.getObjectStateRelMap();

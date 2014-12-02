@@ -56,7 +56,7 @@ int main(int argc, char** argv){
     // body_start[1] = 1.00000;
     // body_start[2] = 0.260000;
     // body_start[3] = 0;          // theta
-    body_start[0] = 4.0;
+    body_start[0] = 0.5;
     body_start[1] = 1.0;
     body_start[2] = 0.260000;
     body_start[3] = 0;          // theta
@@ -69,8 +69,8 @@ int main(int argc, char** argv){
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
-/*
     srv.request.underspecified_start = false;//TODO
+/*
     geometry_msgs::PoseStamped start_object_pose_rel_body;
     {
         // Set the orientation
@@ -106,8 +106,8 @@ int main(int argc, char** argv){
     //goal_pose.pose.position.x = 8.00000;
     //goal_pose.pose.position.y = 2.30000;
     //goal_pose.pose.position.z = 1.2000;
-    goal_pose.pose.position.x = 4.56;
-    goal_pose.pose.position.y = 1.6835;
+    goal_pose.pose.position.x = 1.1;
+    goal_pose.pose.position.y = 0.5;
     goal_pose.pose.position.z = 1.102;
 
     // pose.pose.position.x = 6.440000;
@@ -152,7 +152,7 @@ int main(int argc, char** argv){
     srv.request.initial_eps = 2.0;
     srv.request.final_eps = 2.0;
     srv.request.dec_eps = .1;
-    srv.request.xyz_tolerance = .02;
+    srv.request.xyz_tolerance = .04;
     srv.request.roll_tolerance = .1;
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;

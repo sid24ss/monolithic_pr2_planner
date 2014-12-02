@@ -17,7 +17,7 @@
 #define NUM_IMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
 
-#define EPS1 25
+#define EPS1 10
 #define EPS2 4
 
 namespace monolithic_pr2_planner {
@@ -63,8 +63,8 @@ namespace monolithic_pr2_planner {
             HashManagerPtr m_hash_mgr;
             ros::NodeHandle m_nodehandle;
             GoalStatePtr m_goal;
-            bool m_using_lazy;
             MotionPrimitivesMgr m_mprims;
+            bool m_using_lazy;
             HeuristicMgrPtr m_heur_mgr;
 
             int m_planner_type;

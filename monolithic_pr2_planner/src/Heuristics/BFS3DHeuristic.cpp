@@ -13,25 +13,30 @@ BFS3DHeuristic::BFS3DHeuristic(){
     m_gripper_sphere_radius = m_resolution_params.gripper_sphere_radius;
 }
 
-int BFS3DHeuristic::getGoalHeuristic(GraphStatePtr state){
-    if (m_goal.withinXYZTol(state)){
-        return 0;
-    }
-    DiscObjectState obj_state = state->getObjectStateRelMap();
+int BFS3DHeuristic::getGoalHeuristic(GraphStatePtr state, bool right_arm){
+    // if (m_goal.withinXYZTol(state, right_arm)){
+    //     return 0;
+    // }
+    DiscObjectState obj_state;
+    if (right_arm)
+        obj_state = state->getRightObjectStateRelMap();
+    else
+        obj_state = state->getLeftObjectStateRelMap();
+
     int cost = m_bfs->getDistance(obj_state.x(), obj_state.y(), obj_state.z());
     // ROS_DEBUG_NAMED(HEUR_LOG, "3D dijkstra's cost to %d %d %d is %d", 
     //                 obj_state.x(), obj_state.y(), obj_state.z(), cost);
     return getCostMultiplier()*cost;
 }
 
-void BFS3DHeuristic::setGoal(GoalState& goal_state){
-    DiscObjectState state = goal_state.getObjectState(); 
+void BFS3DHeuristic::setGoal(DiscObjectState& goal_state){
+    // DiscObjectState state = goal_state.getObjectState(); 
     m_goal = goal_state;
-    m_bfs->run(state.x(),
-               state.y(),
-               state.z());
+    m_bfs->run(m_goal.x(),
+               m_goal.y(),
+               m_goal.z());
     ROS_DEBUG_NAMED(HEUR_LOG, "running BFS3Dheuristic on new goal %d %d %d",
-                    state.x(), state.y(), state.z());
+                    m_goal.x(), m_goal.y(), m_goal.z());
 }
 
 void BFS3DHeuristic::update3DHeuristicMap(){

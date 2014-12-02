@@ -1,6 +1,7 @@
 #pragma once
 #include <monolithic_pr2_planner/Environment.h>
 #include <monolithic_pr2_planner_node/CollisionSpaceInterface.h>
+#include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -13,12 +14,12 @@
 #include <sbpl/planners/planner.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
-#include <monolithic_pr2_planner/StatsWriter.h>
+// #include <monolithic_pr2_planner/StatsWriter.h>
 #include <monolithic_pr2_planner/SearchRequest.h>
 #include <monolithic_pr2_planner/PathPostProcessor.h>
 #include <std_srvs/Empty.h>
 
-#include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
+// #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 #include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
 
 #include <full_body_controller/ExecutePath.h>
@@ -38,9 +39,9 @@ namespace monolithic_pr2_planner_node {
             bool planPathCallback(GetMobileArmPlan::Request &req, 
                                   GetMobileArmPlan::Response &res);
             void bindPlanPathToEnv(std::string service_name);
-            void bindExperimentToEnv(std::string service_name);
-            void bindWriteExperimentToEnv(string service_name);
-            void bindDemoToEnv(std::string service_name);
+            // void bindExperimentToEnv(std::string service_name);
+            // void bindWriteExperimentToEnv(string service_name);
+            // void bindDemoToEnv(std::string service_name);
             bool bindCollisionSpaceToTopic(std::string topic_name);
             void bindNavMapToTopic(std::string topic_name);
             void packageStats(std::vector<std::string>& stat_names,
@@ -83,9 +84,9 @@ namespace monolithic_pr2_planner_node {
             tf::TransformListener m_tf;
             std::unique_ptr<CollisionSpaceInterface> m_collision_space_interface;
             ros::ServiceServer m_plan_service;
-            ros::ServiceServer m_experiment_service;
-            ros::ServiceServer m_write_experiments_service;
-            ros::ServiceServer m_demo_service;
+            // ros::ServiceServer m_experiment_service;
+            // ros::ServiceServer m_write_experiments_service;
+            // ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
             std::unique_ptr<MHAPlanner> m_mha_planner;
             ros::Subscriber m_nav_map;
@@ -102,11 +103,11 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
 
 
-            std::unique_ptr<StartGoalGenerator> m_generator;
-            std::unique_ptr<OMPLPR2Planner> m_rrt;
-            std::unique_ptr<OMPLPR2Planner> m_prm;
-            std::unique_ptr<OMPLPR2Planner> m_rrtstar;
-            std::unique_ptr<OMPLPR2Planner> m_rrtstar_first_sol;
-            StatsWriter m_stats_writer;
+            // std::unique_ptr<StartGoalGenerator> m_generator;
+            // std::unique_ptr<OMPLPR2Planner> m_rrt;
+            // std::unique_ptr<OMPLPR2Planner> m_prm;
+            // std::unique_ptr<OMPLPR2Planner> m_rrtstar;
+            // std::unique_ptr<OMPLPR2Planner> m_rrtstar_first_sol;
+            // StatsWriter m_stats_writer;
     };
 }

@@ -29,6 +29,7 @@ namespace monolithic_pr2_planner {
         T_ARA,
     };
 
+
     // for the heuristic map
     typedef std::unordered_map <std::string, int> stringintmap;
     /*! \brief The manager class that handles all the heuristics.
@@ -93,7 +94,7 @@ namespace monolithic_pr2_planner {
             //     = num_mha_heuristics;};
 
             void reset();
-            void setPlannerType(int planner_type);
+            // void setPlannerType(int planner_type);
 
             // prints a complete summary of all the heuristics.
             void printSummaryToInfo(char* logger);

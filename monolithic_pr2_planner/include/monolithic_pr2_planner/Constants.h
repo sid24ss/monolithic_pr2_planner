@@ -1,6 +1,7 @@
 #pragma once
 namespace monolithic_pr2_planner {
     const int GRAPH_STATE_SIZE = 18;
+    const int MPRIM_STATE_SIZE = 12;
     class GraphStateElement {
         public:
             enum {R_OBJ_X,
@@ -22,6 +23,24 @@ namespace monolithic_pr2_planner {
                   BASE_Z,
                   BASE_THETA};
     };
+
+    // class MPrimElement {
+    // public:
+    //   enum {
+    //     OBJ_X,
+    //     OBJ_Y,
+    //     OBJ_Z,
+    //     OBJ_ROLL,
+    //     OBJ_PITCH,
+    //     OBJ_YAW,
+    //     R_FA,
+    //     L_FA,
+    //     BASE_X,
+    //     BASE_Y,
+    //     BASE_Z,
+    //     BASE_THETA
+    //   };
+    // };
     class BodyDOF {
         public:
             enum {X, Y, Z, THETA};
@@ -60,7 +79,7 @@ namespace monolithic_pr2_planner {
 
     class MPrim_Types {
         public:
-            enum { BASE, ARM, ARM_ADAPTIVE, BASE_ADAPTIVE, TORSO };
+            enum { BASE, RARM, LARM, ARM_ADAPTIVE, BASE_ADAPTIVE, TORSO };
     };
 
     class PlanningModes {

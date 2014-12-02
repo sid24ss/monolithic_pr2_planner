@@ -3,7 +3,7 @@
 #include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
 #include <monolithic_pr2_planner/OccupancyGridUser.h>
-#include <monolithic_pr2_planner/StateReps/GoalState.h>
+#include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/Heuristics/AbstractHeuristic.h>
 #include <memory>
 #include <vector>
@@ -16,15 +16,15 @@ namespace monolithic_pr2_planner {
     class BFS3DHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
         public:
             BFS3DHeuristic();
-            int getGoalHeuristic(GraphStatePtr state);
-            void setGoal(GoalState& state);
+            int getGoalHeuristic(GraphStatePtr state, bool right_arm = true);
+            void setGoal(DiscObjectState& state);
             void loadObstaclesFromOccupGrid();
             void visualize();
             void update3DHeuristicMap();
             void setGripperRadius(double radius) { m_gripper_sphere_radius =
                 radius; }
         private:
-            GoalState m_goal;
+            DiscObjectState m_goal;
             double m_gripper_sphere_radius;
             std::unique_ptr<sbpl_arm_planner::BFS_3D> m_bfs;
     };

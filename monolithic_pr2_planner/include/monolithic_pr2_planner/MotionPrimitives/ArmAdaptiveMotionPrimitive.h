@@ -20,7 +20,8 @@ namespace monolithic_pr2_planner {
         public:
             virtual bool apply(const GraphState& graph_state, 
                                GraphStatePtr& successor,
-                               TransitionData& t_data);
+                               TransitionData& t_data,
+                               bool right_arm = true);
             virtual void print() const;
             virtual int motion_type() const { return MPrim_Types::ARM_ADAPTIVE; }; 
             virtual void computeCost(const MotionPrimitiveParams& params);

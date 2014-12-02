@@ -17,7 +17,8 @@ void ArmMotionPrimitive::print() const {
 
 bool ArmMotionPrimitive::apply(const GraphState& source_state, 
                            GraphStatePtr& successor,
-                           TransitionData& t_data){
+                           TransitionData& t_data,
+                           bool right_arm){
     successor.reset(new GraphState(source_state));
 
     bool isSuccessorCreated = successor->applyMPrim(m_end_coord);

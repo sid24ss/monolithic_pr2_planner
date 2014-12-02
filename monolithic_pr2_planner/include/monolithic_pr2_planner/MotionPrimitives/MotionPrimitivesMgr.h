@@ -2,13 +2,13 @@
 #include <vector>
 #include <monolithic_pr2_planner/ParameterCatalog.h>
 #include <monolithic_pr2_planner/MotionPrimitives/FileParser.h>
-#include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
+// #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
-#include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
-#include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
+// #include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
+// #include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmMotionPrimitive.h>
-#include <monolithic_pr2_planner/MotionPrimitives/BaseMotionPrimitive.h>
-#include <monolithic_pr2_planner/MotionPrimitives/TorsoMotionPrimitive.h>
+// #include <monolithic_pr2_planner/MotionPrimitives/BaseMotionPrimitive.h>
+// #include <monolithic_pr2_planner/MotionPrimitives/TorsoMotionPrimitive.h>
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
 
@@ -21,6 +21,10 @@ namespace monolithic_pr2_planner {
             bool loadMPrims(const MotionPrimitiveParams& files);
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
+            std::vector<MotionPrimitivePtr> getRARMPrims() { return
+                m_all_mprims[MPrim_Types::RARM]; };
+            std::vector<MotionPrimitivePtr> getLARMPrims() { return
+                m_all_mprims[MPrim_Types::LARM]; };
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();

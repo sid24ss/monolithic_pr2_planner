@@ -46,28 +46,28 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/StateReps/GoalState.cpp
                                             
                                             src/MotionPrimitives/ArmMotionPrimitive.cpp
-                                            src/MotionPrimitives/BaseMotionPrimitive.cpp
+                                            # src/MotionPrimitives/BaseMotionPrimitive.cpp
                                             src/MotionPrimitives/MotionPrimitive.cpp
                                             src/MotionPrimitives/FileParser.cpp
                                             src/MotionPrimitives/MotionPrimitivesMgr.cpp
-                                            src/MotionPrimitives/BaseAdaptiveMotionPrimitive.cpp
+                                            # src/MotionPrimitives/BaseAdaptiveMotionPrimitive.cpp
                                             src/MotionPrimitives/ArmAdaptiveMotionPrimitive.cpp
-                                            src/MotionPrimitives/ArmTuckMotionPrimitive.cpp
-                                            src/MotionPrimitives/ArmUntuckMotionPrimitive.cpp
-                                            src/MotionPrimitives/TorsoMotionPrimitive.cpp
+                                            # src/MotionPrimitives/ArmTuckMotionPrimitive.cpp
+                                            # src/MotionPrimitives/ArmUntuckMotionPrimitive.cpp
+                                            # src/MotionPrimitives/TorsoMotionPrimitive.cpp
 
-                                            src/Heuristics/BFS3DHeuristic.cpp
-                                            src/Heuristics/BFS2DHeuristic.cpp
-                                            src/Heuristics/BFS2DRotFootprintHeuristic.cpp
-                                            src/Heuristics/EndEffectorHeuristic.cpp
-                                            src/Heuristics/EndEffLocalHeuristic.cpp
-                                            src/Heuristics/BaseWithRotationHeuristic.cpp
                                             src/Heuristics/AbstractHeuristic.cpp
-                                            src/Heuristics/ArmAnglesHeuristic.cpp
-                                            src/Heuristics/BFS3DWithRotationHeuristic.cpp
-                                            src/Heuristics/EndEffOnlyRotationHeuristic.cpp
+                                            src/Heuristics/BFS3DHeuristic.cpp
+                                            # src/Heuristics/BFS2DHeuristic.cpp
+                                            # src/Heuristics/BFS2DRotFootprintHeuristic.cpp
+                                            # src/Heuristics/EndEffectorHeuristic.cpp
+                                            # src/Heuristics/EndEffLocalHeuristic.cpp
+                                            # src/Heuristics/BaseWithRotationHeuristic.cpp
+                                            # src/Heuristics/ArmAnglesHeuristic.cpp
+                                            # src/Heuristics/BFS3DWithRotationHeuristic.cpp
+                                            # src/Heuristics/EndEffOnlyRotationHeuristic.cpp
+                                            # src/Heuristics/2Dgridsearch.cpp
                                             src/Heuristics/HeuristicMgr.cpp
-                                            src/Heuristics/2Dgridsearch.cpp
 
                                             src/SearchRequest.cpp
                                             src/Environment.cpp
@@ -79,8 +79,8 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/Visualizer.cpp
                                             src/PathPostProcessor.cpp
 
-                                            src/ExperimentFramework/randomStartGoalGenerator.cpp
-                                            src/StatsWriter.cpp
+                                            # src/ExperimentFramework/randomStartGoalGenerator.cpp
+                                            # src/StatsWriter.cpp
                                             )
 target_link_libraries(monolithic_pr2_planner ${SBPL_LIBRARIES} bfs3d)
 #rosbuild_add_boost_directories()

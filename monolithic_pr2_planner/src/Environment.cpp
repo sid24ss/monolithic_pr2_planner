@@ -19,8 +19,8 @@ using namespace boost;
 Environment::Environment(ros::NodeHandle nh)
     :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
         m_nodehandle(nh), m_mprims(m_goal),
-        m_heur_mgr(new HeuristicMgr()),
         m_using_lazy(false),
+        m_heur_mgr(new HeuristicMgr()),
         m_planner_type(T_SMHA) {
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
@@ -47,7 +47,7 @@ void Environment::reset() {
  */
 void Environment::setPlannerType(int planner_type) {
     m_planner_type = planner_type;
-    m_heur_mgr->setPlannerType(planner_type);
+    // m_heur_mgr->setPlannerType(planner_type);
     ROS_INFO_NAMED(SEARCH_LOG, "Setting planner type: %d", m_planner_type);
 }
 
@@ -74,7 +74,7 @@ int Environment::GetGoalHeuristic(int stateID) {
 
 int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
-    if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
+    if(stateID == GOAL_STATE){
         return 0;
     }
     std::unique_ptr<stringintmap> values;
@@ -85,183 +85,14 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     }
 
 
-    if(!m_use_new_heuristics){
-      switch (heuristic_id) {
-        case 0:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // ARA Heur 
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-        case 3:
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
-      }
+    switch(heuristic_id) {
+        case 1:
+            return values->at("rarm_heur");
+        case 2:
+            return values->at("larm_heur");
+        default:
+            return std::max(values->at("rarm_heur"), values->at("larm_heur"));
     }
-    else{
-      double w_bfsRot = 0.5;
-      double w_armFold = 0.5;
-
-      switch (heuristic_id) {
-        case 0:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        //case 1:  // ARA Heur 
-          //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
-        case 3:  // Base1, Base2 heur
-          //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("arm_angles_folded"));
-        case 4:
-          if((*values).at("bfsRotFoot0")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
-        case 5:
-          if((*values).at("bfsRotFoot1")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
-        case 6:
-          if((*values).at("bfsRotFoot2")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
-        case 7:
-          if((*values).at("bfsRotFoot3")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
-        case 8:
-          if((*values).at("bfsRotFoot4")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
-        case 9:
-          if((*values).at("bfsRotFoot5")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
-        case 10:
-          if((*values).at("bfsRotFoot6")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
-        case 11:
-          if((*values).at("bfsRotFoot7")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
-        case 12:
-          if((*values).at("bfsRotFoot8")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
-        case 13:
-          if((*values).at("bfsRotFoot9")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
-        case 14:
-          if((*values).at("bfsRotFoot10")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
-        case 15:
-          if((*values).at("bfsRotFoot11")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
-        case 16:
-          if((*values).at("bfsRotFoot12")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
-        case 17:
-          if((*values).at("bfsRotFoot13")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
-        case 18:
-          if((*values).at("bfsRotFoot14")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
-        case 19:
-          if((*values).at("bfsRotFoot15")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
-      }
-    }
-
-    /*
-    switch (heuristic_id) {
-      case 0:  // Anchor
-        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      case 1:  // ARA Heur 
-        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      case 2:  // Base1, Base2 heur
-        return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-      case 3:
-        return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
-    }
-    */
-
-    /*
-    switch (m_planner_type) {
-        case T_SMHA:
-        case T_MHG_REEX:
-        case T_MHG_NO_REEX:
-        case T_ARA:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // ARA Heur
-                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                // case 2:
-                //     return EPS2*(*values).at("admissible_endeff");
-                case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") +
-                        0.5f*(*values).at("endeff_rot_goal"));
-                case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") +
-                        0.5f*(*values).at("endeff_rot_goal"));
-            }
-            break;
-        case T_IMHA:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // ARA Heur
-                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-                case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_goal"));
-            }
-            break;
-        case T_MPWA:
-            return (heuristic_id+1)*(EPS1*EPS2/NUM_SMHA_HEUR)*std::max(
-                (*values).at("admissible_endeff"), (*values).at("admissible_base"));
-            break;
-        case T_EES:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // Inadmissible
-                    return (*values).at("base_with_rot_0") + (*values).at("admissible_endeff");
-                    // return static_cast<int>(0.5f*(*values)[4] + 0.5f*(*values).at("admissible_endeff"));
-                case 2:  // Distance function
-                    // return (*values)[2];
-                    // ROS_DEBUG_NAMED(HEUR_LOG, "Arm : %d, Base : %d", (*values)[2],
-                    //     (*values)[3]);
-                    return (*values)["uniform_2d"] + (*values)["uniform_3d"];
-            }
-            break;
-    }
-    */
-
-    // Post-paper
-    // switch(heuristic_id){
-    //     case 0: //Anchor
-    //         return std::max(values.at("admissible_endeff"), values.at("admissible_base"));
-    //     case 1: // base
-    //         return values[2];
-    //     case 2: // Base + arm
-    //         return static_cast<int>(0.5f*values[2] +
-    //             0.5f*values[0]);
-    // }
-
-
-    // ROS_DEBUG_NAMED(HEUR_LOG, "2: %d,\t 3: %d", values[2],
-    //     values[3]);
-    // EES
 
     return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
 }
@@ -294,12 +125,27 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
         usleep(5000);
     }
-    for (auto mprim : m_mprims.getMotionPrims()) {
+
+    std::vector<MotionPrimitivePtr> mprims;
+    bool right_arm = true;
+    if (q_id == 1) { // right arm
+        mprims = m_mprims.getRARMPrims();
+        right_arm = true;
+    } else if (q_id == 2) {
+        right_arm = false;
+        mprims = m_mprims.getLARMPrims();
+    }
+    else {
+        mprims = m_mprims.getMotionPrims();
+    }
+
+    // get the right set of actions.
+    for (auto mprim : mprims) {
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
-        if (!mprim->apply(*source_state, successor, t_data)) {
+        if (!mprim->apply(*source_state, successor, t_data, right_arm)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
@@ -313,7 +159,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                             successor->id());
             successor->printToDebug(MPRIM_LOG);
 
-            if (m_goal->isSatisfiedBy(successor)){
+            if (m_goal->isPartiallySatisfiedBy(successor)){
                 m_goal->storeAsSolnState(successor);
                 ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
                     mprim->cost());
@@ -376,7 +222,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
         GraphStatePtr successor;
         TransitionData t_data;
 
-        if (mprim->motion_type() == MPrim_Types::ARM){
+        if (mprim->motion_type() == MPrim_Types::RARM){
             successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
             ROS_DEBUG_NAMED(SEARCH_LOG, "arm mprim/source/successor");
@@ -427,12 +273,12 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
 int Environment::GetTrueCost(int parentID, int childID){
     TransitionData t_data;
 
-    vector<MotionPrimitivePtr> small_mprims;
+    // vector<MotionPrimitivePtr> small_mprims;
     if (m_edges.find(Edge(parentID, childID)) == m_edges.end()){
       ROS_ERROR("transition hasn't been found between %d and %d??", parentID, childID);
         assert(false);
     }
-    small_mprims.push_back(m_edges[Edge(parentID, childID)]);
+    // small_mprims.push_back(m_edges[Edge(parentID, childID)]);
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
 
     ROS_DEBUG_NAMED(SEARCH_LOG, "evaluating edge (%d %d)", parentID, childID);
@@ -467,24 +313,25 @@ int Environment::GetTrueCost(int parentID, int childID){
 
 bool Environment::setStartGoal(SearchRequestPtr search_request,
                                int& start_id, int& goal_id){
-    RobotState start_pose(search_request->m_params->base_start, 
-                         search_request->m_params->right_arm_start,
-                         search_request->m_params->left_arm_start);
-    ContObjectState obj_state = start_pose.getObjectStateRelMap();
-    obj_state.printToInfo(SEARCH_LOG);
 
-    m_edges.clear();
+    // validity of start state
+    RobotState start_pose(search_request->m_params->base_start, 
+                          search_request->m_params->right_arm_start,
+                          search_request->m_params->left_arm_start);
+    // ContObjectState r_obj_start = start_pose.getRightObjectStateRelMap();
+
 
     if (!search_request->isValid(m_cspace_mgr)){
-        obj_state.printToInfo(SEARCH_LOG);
+        ROS_DEBUG_NAMED(SEARCH_LOG, "Invalid start state!");
         start_pose.visualize();
         return false;
     }
 
     start_pose.visualize();
-    m_cspace_mgr->visualizeAttachedObject(start_pose);
+    std::cin.get();
+    // m_cspace_mgr->visualizeAttachedObject(start_pose);
     //m_cspace_mgr->visualizeCollisionModel(start_pose);
-    //std::cin.get();
+    m_edges.clear();
 
     GraphStatePtr start_graph_state = make_shared<GraphState>(start_pose);
     m_hash_mgr->save(start_graph_state);
@@ -493,7 +340,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     ROS_INFO_NAMED(SEARCH_LOG, "Start state set to:");
     start_pose.printToInfo(SEARCH_LOG);
-    obj_state.printToInfo(SEARCH_LOG);
+    // obj_state.printToInfo(SEARCH_LOG);
     // start_pose.visualize();
 
 
@@ -506,13 +353,13 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     }
 
     ROS_INFO_NAMED(SEARCH_LOG, "Goal state created:");
-    ContObjectState c_goal = m_goal->getObjectState();
-    c_goal.printToInfo(SEARCH_LOG);
+    // ContObjectState c_goal = m_goal->getObjectState();
+    // c_goal.printToInfo(SEARCH_LOG);
     m_goal->visualize();
 
     // This informs the adaptive motions about the goal.
     ArmAdaptiveMotionPrimitive::goal(*m_goal);
-    BaseAdaptiveMotionPrimitive::goal(*m_goal);
+    // BaseAdaptiveMotionPrimitive::goal(*m_goal);
 
     // informs the heuristic about the goal
     m_heur_mgr->setGoal(*m_goal);
@@ -605,9 +452,10 @@ vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
 }
 
 void Environment::generateStartState(SearchRequestPtr search_request) {
-    ContObjectState start_obj_state(search_request->m_params->obj_start);
+    ContObjectState r_start_obj_state = search_request->m_params->r_obj_start;
+    ContObjectState l_start_obj_state = search_request->m_params->l_obj_start;
     ContBaseState base_start(search_request->m_params->base_start);
-    RobotState start_robot_state(base_start, start_obj_state);
+    RobotState start_robot_state(base_start, r_start_obj_state, l_start_obj_state);
     start_robot_state.visualize();
     m_cspace_mgr->visualizeAttachedObject(start_robot_state);
     ROS_DEBUG_NAMED(CONFIG_LOG, "Generate start state : Keyboard");

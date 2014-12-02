@@ -15,42 +15,52 @@ MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m
 bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     m_params = params;
 
-    MPrimList arm_mprims;
-    m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, arm_mprims);
+    MPrimList rarm_mprims;
+    bool right_arm = true;
+    m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, rarm_mprims, right_arm);
+    
+    MPrimList larm_mprims;
+    right_arm = false;
+    m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, larm_mprims,
+        right_arm);
 
-    MPrimList base_mprims;
-    m_parser.parseBaseMotionPrimitives(params.base_motion_primitive_file, base_mprims);
+    // MPrimList base_mprims;
+    // m_parser.parseBaseMotionPrimitives(params.base_motion_primitive_file, base_mprims);
     ArmAdaptiveMotionPrimitivePtr armAMP = make_shared<ArmAdaptiveMotionPrimitive>();
-    ArmTuckMotionPrimitivePtr tuckAMP = make_shared<ArmTuckMotionPrimitive>();
-    ArmUntuckMotionPrimitivePtr untuckAMP = make_shared<ArmUntuckMotionPrimitive>(true);
-    ArmUntuckMotionPrimitivePtr untuckPartialAMP = make_shared<ArmUntuckMotionPrimitive>(false);
+    // ArmTuckMotionPrimitivePtr tuckAMP = make_shared<ArmTuckMotionPrimitive>();
+    // ArmUntuckMotionPrimitivePtr untuckAMP = make_shared<ArmUntuckMotionPrimitive>(true);
+    // ArmUntuckMotionPrimitivePtr untuckPartialAMP = make_shared<ArmUntuckMotionPrimitive>(false);
 
     MPrimList arm_amps;
     arm_amps.push_back(armAMP);
-    arm_amps.push_back(tuckAMP);
-    arm_amps.push_back(untuckAMP);
+    // arm_amps.push_back(tuckAMP);
+    // arm_amps.push_back(untuckAMP);
 
-    MPrimList base_amps;
-    int NEG_TURN = -1;
-    int POS_TURN = 1;
-    BaseAdaptiveMotionPrimitivePtr bamp1 = make_shared<BaseAdaptiveMotionPrimitive>(NEG_TURN);
-    BaseAdaptiveMotionPrimitivePtr bamp2 = make_shared<BaseAdaptiveMotionPrimitive>(POS_TURN);
-    base_amps.push_back(bamp1);
-    base_amps.push_back(bamp2);
+    // MPrimList base_amps;
+    // int NEG_TURN = -1;
+    // int POS_TURN = 1;
+    // BaseAdaptiveMotionPrimitivePtr bamp1 = make_shared<BaseAdaptiveMotionPrimitive>(NEG_TURN);
+    // BaseAdaptiveMotionPrimitivePtr bamp2 = make_shared<BaseAdaptiveMotionPrimitive>(POS_TURN);
+    // base_amps.push_back(bamp1);
+    // base_amps.push_back(bamp2);
 
-    MPrimList torso_mprims;
-    int VERTICAL_UP = 1;
-    int VERTICAL_DOWN = -1;
-    TorsoMotionPrimitivePtr t_mprim1 = make_shared<TorsoMotionPrimitive>(VERTICAL_UP);
-    TorsoMotionPrimitivePtr t_mprim2 = make_shared<TorsoMotionPrimitive>(VERTICAL_DOWN);
-    torso_mprims.push_back(t_mprim1);
-    torso_mprims.push_back(t_mprim2);
+    // MPrimList torso_mprims;
+    // int VERTICAL_UP = 1;
+    // int VERTICAL_DOWN = -1;
+    // TorsoMotionPrimitivePtr t_mprim1 = make_shared<TorsoMotionPrimitive>(VERTICAL_UP);
+    // TorsoMotionPrimitivePtr t_mprim2 = make_shared<TorsoMotionPrimitive>(VERTICAL_DOWN);
+    // torso_mprims.push_back(t_mprim1);
+    // torso_mprims.push_back(t_mprim2);
 
-    m_all_mprims[MPrim_Types::ARM] = arm_mprims;
-    m_all_mprims[MPrim_Types::BASE] = base_mprims;
-    m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
+    m_all_mprims[MPrim_Types::RARM] = rarm_mprims;
+    m_all_mprims[MPrim_Types::RARM].push_back(armAMP);
+
+    m_all_mprims[MPrim_Types::LARM] = larm_mprims;
+    m_all_mprims[MPrim_Types::LARM].push_back(armAMP);
+    // m_all_mprims[MPrim_Types::BASE] = base_mprims;
+    // m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
     m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
-    m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
+    // m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
 
     computeAllMPrimCosts(m_all_mprims);
 
@@ -101,14 +111,15 @@ void MotionPrimitivesMgr::loadTorsoMPrims(){
 // note that we don't separate left and right arm mprims here, since the mprims
 // are in cartesian space
 void MotionPrimitivesMgr::loadArmOnlyMPrims(){
-    combineVectors(m_all_mprims[MPrim_Types::ARM], m_active_mprims);
+    combineVectors(m_all_mprims[MPrim_Types::RARM], m_active_mprims);
+    combineVectors(m_all_mprims[MPrim_Types::LARM], m_active_mprims);
     combineVectors(m_all_mprims[MPrim_Types::ARM_ADAPTIVE], m_active_mprims);
 }
 
 void MotionPrimitivesMgr::loadAllMPrims(){
-    loadBaseOnlyMPrims();
+    // loadBaseOnlyMPrims();
     loadArmOnlyMPrims();
-    loadTorsoMPrims();
+    // loadTorsoMPrims();
 }
 
 void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){

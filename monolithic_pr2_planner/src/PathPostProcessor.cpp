@@ -189,9 +189,9 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         m_cspace_mgr->visualizeAttachedObject(robot_state);
         // m_cspace_mgr->visualizeCollisionModel(robot_state);
         robot_state.printToDebug(POSTPROCESSOR_LOG);
-        robot_state.getObjectStateRelBody().getContObjectState().printToDebug(POSTPROCESSOR_LOG);
+        // robot_state.getObjectStateRelBody().getContObjectState().printToDebug(POSTPROCESSOR_LOG);
         // std::cin.get();
-        usleep(30000);
+        usleep(100000);
     }
 }
 
@@ -292,14 +292,14 @@ FullBodyState PathPostProcessor::createFBState(const RobotState& robot){
     state.left_arm = l_arm;
     state.right_arm = r_arm;
     state.base = base;
-    ContObjectState obj_state = robot.getObjectStateRelMap();
-    obj[0] = obj_state.x();
-    obj[1] = obj_state.y();
-    obj[2] = obj_state.z();
-    obj[3] = obj_state.roll();
-    obj[4] = obj_state.pitch();
-    obj[5] = obj_state.yaw();
-    state.obj = obj;
+    // ContObjectState obj_state = robot.getObjectStateRelMap();
+    // obj[0] = obj_state.x();
+    // obj[1] = obj_state.y();
+    // obj[2] = obj_state.z();
+    // obj[3] = obj_state.roll();
+    // obj[4] = obj_state.pitch();
+    // obj[5] = obj_state.yaw();
+    // state.obj = obj;
     return state;
 }
 

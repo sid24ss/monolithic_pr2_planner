@@ -36,8 +36,8 @@ rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 rosbuild_add_executable(node src/node.cpp src/EnvInterfaces.cpp
                              src/CollisionSpaceInterface.cpp
-                             src/ompl_pr2_planner.cpp
-                             src/ompl_collision_checker.cpp
+                             # src/ompl_pr2_planner.cpp
+                             # src/ompl_collision_checker.cpp
                         )
 # TODO figure out why i have to include bfs3d here
 target_link_libraries(node monolithic_pr2_planner bfs3d ${SBPL_LIBRARIES})
@@ -45,16 +45,16 @@ target_link_libraries(node monolithic_pr2_planner bfs3d ${SBPL_LIBRARIES})
 rosbuild_add_executable(testPlanningRequest src/testPlanningRequest.cpp)
 target_link_libraries(testPlanningRequest monolithic_pr2_planner)
 
-rosbuild_add_executable(testExecute src/testExecute.cpp)
-target_link_libraries(testExecute monolithic_pr2_planner ${SBPL_LIBRARIES})
+# rosbuild_add_executable(testExecute src/testExecute.cpp)
+# target_link_libraries(testExecute monolithic_pr2_planner ${SBPL_LIBRARIES})
 
 rosbuild_add_executable(stlToOctomap src/publishSTLToOctomap.cpp)
-rosbuild_add_executable(run_simulation src/run_simulations.cpp)
-rosbuild_add_executable(run_sim_file src/runSimulationFromFile.cpp)
-rosbuild_add_executable(run_demo src/run_demo.cpp)
+# rosbuild_add_executable(run_simulation src/run_simulations.cpp)
+# rosbuild_add_executable(run_sim_file src/runSimulationFromFile.cpp)
+# rosbuild_add_executable(run_demo src/run_demo.cpp)
 
 rosbuild_add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
-rosbuild_add_executable(runTests src/run_tests.cpp)
-rosbuild_add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
+# rosbuild_add_executable(runTests src/run_tests.cpp)
+# rosbuild_add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
 
 

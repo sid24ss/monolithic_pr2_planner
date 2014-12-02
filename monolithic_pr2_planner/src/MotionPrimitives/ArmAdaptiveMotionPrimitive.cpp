@@ -12,11 +12,28 @@ GoalState ArmAdaptiveMotionPrimitive::m_goal;
 // TODO refactor this
 bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
                                   GraphStatePtr& successor,
-                                  TransitionData& t_data){
-    DiscObjectState goal = m_goal.getObjectState();
-    // TODO parameterize this distance?
-    if (dist(source_state.getObjectStateRelMap(), goal) > 2){
+                                  TransitionData& t_data,
+                                  bool right_arm){
+    std::shared_ptr<DiscObjectState> goal;
+    if (right_arm){
+        goal = m_goal.getRightObjectState();
+    }
+    else{
+        goal = m_goal.getLeftObjectState();
+    }
+    if(!goal)
         return false;
+
+    // TODO parameterize this distance?
+    if (right_arm){
+        if (dist(source_state.getRightObjectStateRelMap(), *goal) > 1){
+            return false;
+        }
+    }
+    else{
+        if (dist(source_state.getLeftObjectStateRelMap(), *goal) > 1){
+            return false;
+        }
     }
 
     DiscBaseState base_state = source_state.robot_pose().base_state();
@@ -25,18 +42,23 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     // into the discrete yaw in the object frame. object frame yaw is
     // generally discretized into 64 states, whereas the base theta is 16.
     ContBaseState c_base = source_state.robot_pose().base_state();
-    ContObjectState c_obj_state = m_goal.getObjectState();
+    ContObjectState c_obj_state = ContObjectState(*goal);
     c_obj_state.yaw(c_base.theta());
 
     // convert the object's rpy from map frame to body frame. Since the robot is
     // always on a flat surface, the roll and pitch of the map and body frame
     // are aligned - the only thing that needs to be transformed is the yaw.
-    DiscObjectState obj_in_body_frame = source_state.getObjectStateRelBody();
-    obj_in_body_frame.roll(goal.roll());
-    obj_in_body_frame.pitch(goal.pitch());
+    DiscObjectState obj_in_body_frame;
+    if (right_arm)
+        obj_in_body_frame = source_state.getRightObjectStateRelBody();
+    else
+        obj_in_body_frame = source_state.getLeftObjectStateRelBody();
+
+    obj_in_body_frame.roll(goal->roll());
+    obj_in_body_frame.pitch(goal->pitch());
 
     // this line is needed because we need to convert from disc
-    ContObjectState c_goal(goal);
+    ContObjectState c_goal(*goal);
     ROS_DEBUG_NAMED(MPRIM_LOG, "c obj state %f goal yaw %f", c_obj_state.yaw(), c_goal.yaw());
     double short_ang = shortest_angular_distance(c_obj_state.yaw(),c_goal.yaw());
     ContObjectState blah(obj_in_body_frame);
@@ -49,14 +71,25 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
                          source_state.robot_pose().right_arm(), 
                          source_state.robot_pose().left_arm());
     RobotPosePtr successor_robot_pose;
-    bool isIKSuccess = RobotState::computeRobotPose(obj_in_body_frame, 
-                                                    seed_pose, 
-                                                    successor_robot_pose,
-                                                    true);
+    bool isIKSuccess;
+    if (right_arm){
+        isIKSuccess = RobotState::computeRobotPose(obj_in_body_frame,
+                                    source_state.getLeftObjectStateRelBody(),
+                                    seed_pose, 
+                                    successor_robot_pose,
+                                    true);
+    } else {
+        isIKSuccess = RobotState::computeRobotPose(
+                                    source_state.getRightObjectStateRelBody(),
+                                    obj_in_body_frame,
+                                    seed_pose, 
+                                    successor_robot_pose,
+                                    true);
+    }
     if (isIKSuccess){
         ROS_DEBUG_NAMED(MPRIM_LOG, "successful arm adaptive motion!");
-        ContObjectState new_obj_state = successor_robot_pose->getObjectStateRelMap();
-        new_obj_state.printToDebug(MPRIM_LOG);
+        // ContObjectState new_obj_state = successor_robot_pose->getObjectStateRelMap();
+        // new_obj_state.printToDebug(MPRIM_LOG);
         //assert(fabs(new_obj_state.x() == c_obj_state.x()) < .0001);
         //assert(fabs(new_obj_state.y() == c_obj_state.y()) < .0001);
         //assert(fabs(new_obj_state.z()-c_obj_state.z()) < .0001);
@@ -68,6 +101,11 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
         ROS_DEBUG_NAMED(MPRIM_LOG, "IK failed on arm AMP");
         return false;
     }
+
+    // if (isIKSuccess){
+    //     successor->robot_pose().visualize(0);
+    //     std::cin.get();
+    // }
 
     t_data.motion_type(motion_type());
     // TODO compute real cost
@@ -96,7 +134,6 @@ void ArmAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_sta
     ContBaseState c_base = source_state.robot_pose().base_state();
     std::vector<ContBaseState> cont_base_states(interp_steps.size(), c_base);
     t_data.cont_base_interm_steps(cont_base_states);
-
 }
 
 void ArmAdaptiveMotionPrimitive::print() const {

@@ -30,13 +30,9 @@ RobotState::RobotState(ContBaseState base_state, RightContArmState r_arm,
     m_base_state(base_state), 
     m_right_arm(r_arm), 
     m_left_arm(l_arm){
-    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
-                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
-    if (left_arm_dominant){
-        m_obj_state = l_arm.getObjectStateRelBody();
-    } else {
-        m_obj_state = r_arm.getObjectStateRelBody();
-    }
+
+    m_left_obj_state = l_arm.getObjectStateRelBody();
+    m_right_obj_state = r_arm.getObjectStateRelBody();
 }
 
 RobotState::RobotState(ContBaseState base_state, ContObjectState r_c_obj_state,
@@ -175,8 +171,9 @@ void RobotState::visualize(int hue){
     BodyPose body_pose = m_base_state.body_pose();
     stringstream ss;
     ss << "planner_" << hue;
+    bool use_embedded_materials = false;
     Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, hue, 
-                                    ss.str(), 1);
+                                    ss.str(), 1, use_embedded_materials);
 }
 
 // this is a bit weird at the moment, but we use the arm angles as seed angles
