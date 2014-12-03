@@ -85,25 +85,29 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     // }
 
     int heur = 0;
-    switch(heuristic_id) {
-        case 1:
-            if (m_goal->getRightObjectState()){
-                heur = m_heur_mgr->getGoalHeuristic(successor, "rarm_heur",
-                    true);
-            }
-            else
-                heur = 0;
-        case 2:
-            if (m_goal->getLeftObjectState())
-                heur = m_heur_mgr->getGoalHeuristic(successor, "larm_heur",
-                    false);
-            else
-                heur = 0;
-        default:
-            heur = std::max(m_heur_mgr->getGoalHeuristic(successor, "rarm_heur",
-                    true), m_heur_mgr->getGoalHeuristic(successor, "larm_heur",
-                    false));
+    int r_heur = 0;
+    int l_heur = 0;
+    double w_l = 2.0;
+    double w_f = 1.0;
+    if (m_goal->getRightObjectState()) {
+        r_heur = m_heur_mgr->getGoalHeuristic(successor, "rarm_heur",
+            true);
     }
+    if (m_goal->getLeftObjectState()) {
+        l_heur = m_heur_mgr->getGoalHeuristic(successor, "larm_heur",
+            false);
+    }
+    switch(heuristic_id) {
+        case 1: // right
+            heur = w_l * r_heur + w_f * l_heur;
+            break;
+        case 2: // left
+            heur = w_l * l_heur + w_f * r_heur;
+            break;
+        default:
+            heur = l_heur + r_heur;
+    }
+    ROS_DEBUG_NAMED(HEUR_LOG, "heuristic_id: %d heur: %d", heuristic_id, heur);
     return heur;
 }
 
@@ -131,7 +135,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         RobotState expansion_pose = source_state->robot_pose();
         expansion_pose.visualize(250/NUM_SMHA_HEUR*q_id);
         // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*q_id);
-        m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*q_id);
+        // m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*q_id);
         // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
         usleep(5000);
     }
@@ -153,12 +157,14 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
     for (auto mprim : mprims) {
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         mprim->printEndCoord();
-        GraphStatePtr successor;
+        GraphStatePtr successor, pre_policy_state;
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data, right_arm)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
+        // apply policy to the *other* arm - hence the !right_arm
+        // applyPolicy(*pre_policy_state, successor, !right_arm);
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
@@ -187,6 +193,70 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         //     right_arm);
         // successor->robot_pose().visualize(250/NUM_SMHA_HEUR*q_id);
         // std::cin.get();
+    }
+    // std::cin.get();
+}
+
+void Environment::applyPolicy(const GraphState& pre_policy_state, GraphStatePtr& successor, bool right_arm)
+{
+    successor = boost::make_shared<GraphState>(pre_policy_state);
+    if (right_arm && m_goal->getRightObjectState()) {
+        // interpolate the right arm motion
+        ContObjectState end_state = ContObjectState(*m_goal->getRightObjectState());
+        ContObjectState current_state = pre_policy_state.robot_pose().getRightObjectStateRelMap();
+        int num_interp_steps = ContObjectState::numInterpSteps(current_state,
+            end_state);
+        ROS_DEBUG_NAMED(SEARCH_LOG, "[policy-right] num_interp_steps : %d", num_interp_steps);
+        double dx = (end_state.x() - current_state.x())/num_interp_steps;
+        double dy = (end_state.y() - current_state.y())/num_interp_steps;
+        double dz = (end_state.z() - current_state.z())/num_interp_steps;
+        ContObjectState new_state(current_state.x() + dx,
+                                  current_state.y() + dy,
+                                  current_state.z() + dz,
+                                  current_state.roll(),
+                                  current_state.pitch(),
+                                  current_state.yaw());
+        ROS_DEBUG_NAMED(SEARCH_LOG, "current_state : ");
+        current_state.printToDebug(SEARCH_LOG);
+        ROS_DEBUG_NAMED(SEARCH_LOG, "new_state : ");
+        new_state.printToDebug(SEARCH_LOG);
+        RobotPosePtr new_robot_pose;
+        if(RobotState::computeRobotPose(
+            DiscObjectState(new_state),
+            pre_policy_state.getLeftObjectStateRelBody(),
+            successor->robot_pose(),
+            new_robot_pose)){
+            ROS_DEBUG_NAMED(SEARCH_LOG, "Successful policy for right arm!");
+            successor = boost::make_shared<GraphState>(*new_robot_pose);
+        } else {
+            ROS_DEBUG_NAMED(SEARCH_LOG, "Failed policy right");
+        }
+    } else if (!right_arm && m_goal->getLeftObjectState()) {
+        // interpolate the right arm motion
+        ContObjectState end_state = ContObjectState(*m_goal->getLeftObjectState            ());
+        ContObjectState current_state = pre_policy_state.robot_pose().getLeftObjectStateRelMap();
+        int num_interp_steps = ContObjectState::numInterpSteps(current_state,
+            end_state);
+        double dx = (end_state.x() - current_state.x())/num_interp_steps;
+        double dy = (end_state.y() - current_state.y())/num_interp_steps;
+        double dz = (end_state.z() - current_state.z())/num_interp_steps;
+        ContObjectState new_state(current_state.x() + dx,
+                                  current_state.y() + dy,
+                                  current_state.z() + dz,
+                                  current_state.roll(),
+                                  current_state.pitch(),
+                                  current_state.yaw());
+        RobotPosePtr new_robot_pose;
+        if(RobotState::computeRobotPose(
+            pre_policy_state.getRightObjectStateRelBody(),
+            DiscObjectState(new_state),
+            successor->robot_pose(),
+            new_robot_pose)){
+            ROS_DEBUG_NAMED(SEARCH_LOG, "Successful policy for left arm!");
+            successor = boost::make_shared<GraphState>(*new_robot_pose);
+        } else {
+            ROS_DEBUG_NAMED(SEARCH_LOG, "Failed policy left");
+        }
     }
 }
 
@@ -381,6 +451,19 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     return true;
 }
 
+int Environment::getGoalSideAchieved()
+{
+    // first, get the solution state.
+    GraphStatePtr goal_state = m_goal->getSolnState();
+    if (m_goal->isRightGoalAchieved(goal_state))
+        return 1;
+    else if (m_goal->isLeftGoalAchieved(goal_state))
+        return 2;
+    else
+        return 0;
+}
+
+
 // a hack to reserve a goal id in the hash so that no real graph state is ever
 // saved as the goal state id
 int Environment::saveFakeGoalState(const GraphStatePtr& start_graph_state){
@@ -460,6 +543,7 @@ vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
     std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
     if(m_param_catalog.m_visualization_params.final_path){
+        std::cin.get();
         postprocessor.visualizeFinalPath(final_path);
     }
     return final_path;

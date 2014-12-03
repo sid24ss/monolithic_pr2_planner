@@ -30,6 +30,8 @@ namespace monolithic_pr2_planner {
                 = true);
             bool withinRPYTol(const GraphStatePtr& graph_state, bool right_arm
                 = true);
+            bool isRightGoalAchieved(const GraphStatePtr& graph_state);
+            bool isLeftGoalAchieved(const GraphStatePtr& graph_state);
             void visualize();
         private:
             vector<int> m_possible_goals;

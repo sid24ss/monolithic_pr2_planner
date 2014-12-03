@@ -38,12 +38,17 @@ bool SearchRequest::isValid(CSpaceMgrPtr& cspace){
 }
 
 GoalStatePtr SearchRequest::createGoalState(){
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Creating goal state from search request");
     std::shared_ptr<DiscObjectState> r_goal;
     std::shared_ptr<DiscObjectState> l_goal;
-    if (m_params->r_obj_goal)
+    if (m_params->r_obj_goal){
+        ROS_DEBUG_NAMED(CONFIG_LOG, "setting right");
         r_goal = std::make_shared<DiscObjectState>(*m_params->r_obj_goal);
-    if (m_params->l_obj_goal)
+    }
+    if (m_params->l_obj_goal){
+        ROS_DEBUG_NAMED(CONFIG_LOG, "setting left");
         l_goal = std::make_shared<DiscObjectState>(*m_params->l_obj_goal);
+    }
     return boost::make_shared<GoalState>(r_goal,
                                          l_goal,
                                          m_params->xyz_tolerance,

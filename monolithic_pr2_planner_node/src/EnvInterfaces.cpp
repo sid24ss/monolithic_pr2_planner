@@ -2,14 +2,14 @@
 #include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner/StateReps/ContBaseState.h>
-#include <monolithic_pr2_planner/StateReps/ContObjectState.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <kdl/frames.hpp>
 #include <boost/filesystem.hpp>
 #include <geometry_msgs/Pose.h>
 #include <leatherman/utils.h>
 #include <LinearMath/btVector3.h>
-#include <climits>
+#include <limits>
+#include <algorithm>
 
 using namespace monolithic_pr2_planner_node;
 using namespace monolithic_pr2_planner;
@@ -64,221 +64,12 @@ void EnvInterfaces::bindPlanPathToEnv(string service_name){
                                                    this);
 }
 
-// void EnvInterfaces::bindExperimentToEnv(string service_name){
-//     m_experiment_service = m_nodehandle.advertiseService(service_name, 
-//                                                          &EnvInterfaces::experimentCallback,
-//                                                          this);
-// }
-
-// void EnvInterfaces::bindWriteExperimentToEnv(string service_name){
-//     m_write_experiments_service = m_nodehandle.advertiseService(service_name, 
-//         &EnvInterfaces::GenerateExperimentFile,
-//         this);
-// }
-
-// void EnvInterfaces::bindDemoToEnv(string service_name){
-//     m_demo_service = m_nodehandle.advertiseService(service_name, 
-//                                                 &EnvInterfaces::demoCallback,
-//                                                 this);
-// }
-
-//making experiments:
-//launch file brings up stlToOctomap with rosparams that tell it to randomize environment
-//addTableObstacles
-//randomizeTableObstacles - if this is false we have to provide the next one (when true we have to write configuration to file)
-//pathToTableObstacleParamFile (this file has num_surfaces, num_obs, and seed)
-//
-//service call is made to this function with the number of trials to make
-//this guy makes random trials with checks for rrt-connect feasibility
-//it writes the start/goal pairs to file (in the yaml format)
-//
-//////////
-//
-//running experiments:
-//stlToOctomap is launched with rosparams (and table config file) to re-create the env
-//runTests is run with the yaml file
-// bool EnvInterfaces::GenerateExperimentFile(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-//   ROS_INFO("generating trials!");
-//   vector<pair<RobotState, RobotState> > start_goal_pairs;
-//   RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-//   int number_of_trials = 10;
-//   m_generator->initializeRegions();//reads from ros params set by stlToOctomap
-//   m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
-
-//   int test_num = 0;
-//   FILE* fout = fopen("fbp_tests.yaml","w");
-//   fprintf(fout, "experiments:\n\n");
-//   for (auto& start_goal : start_goal_pairs){
-//     geometry_msgs::Quaternion start_obj_q;
-//     leatherman::rpyToQuatMsg(start_goal.first.getObjectStateRelMap().roll(),
-//         start_goal.first.getObjectStateRelMap().pitch(),
-//         start_goal.first.getObjectStateRelMap().yaw(),
-//         start_obj_q);
-//     geometry_msgs::Quaternion goal_obj_q;
-//     leatherman::rpyToQuatMsg(start_goal.second.getObjectStateRelMap().roll(),
-//         start_goal.second.getObjectStateRelMap().pitch(),
-//         start_goal.second.getObjectStateRelMap().yaw(),
-//         goal_obj_q);
-
-//     fprintf(fout,"  - test: test_%d\n", test_num);
-//     fprintf(fout,"    start:\n");
-//     fprintf(fout,"      object_xyz_wxyz: %f %f %f %f %f %f %f\n",
-//         start_goal.first.getObjectStateRelMap().x(),
-//         start_goal.first.getObjectStateRelMap().y(),
-//         start_goal.first.getObjectStateRelMap().z(),
-//         start_obj_q.w, start_obj_q.x, start_obj_q.y, start_obj_q.z);
-//     fprintf(fout,"      base_xyzyaw: %f %f %f %f\n",
-//         start_goal.first.getContBaseState().x(),
-//         start_goal.first.getContBaseState().y(),
-//         start_goal.first.getContBaseState().z(),
-//         start_goal.first.getContBaseState().theta());
-//     fprintf(fout,"      rarm: %f %f %f %f %f %f %f\n",
-//         start_goal.first.right_arm().getShoulderPanAngle(),
-//         start_goal.first.right_arm().getShoulderLiftAngle(),
-//         start_goal.first.right_arm().getUpperArmRollAngle(),
-//         start_goal.first.right_arm().getElbowFlexAngle(),
-//         start_goal.first.right_arm().getForearmRollAngle(),
-//         start_goal.first.right_arm().getWristFlexAngle(),
-//         start_goal.first.right_arm().getWristRollAngle());
-//     fprintf(fout,"      larm: %f %f %f %f %f %f %f\n",
-//         start_goal.first.left_arm().getShoulderPanAngle(),
-//         start_goal.first.left_arm().getShoulderLiftAngle(),
-//         start_goal.first.left_arm().getUpperArmRollAngle(),
-//         start_goal.first.left_arm().getElbowFlexAngle(),
-//         start_goal.first.left_arm().getForearmRollAngle(),
-//         start_goal.first.left_arm().getWristFlexAngle(),
-//         start_goal.first.left_arm().getWristRollAngle());
-//     fprintf(fout,"    goal:\n");
-//     fprintf(fout,"      object_xyz_wxyz: %f %f %f %f %f %f %f\n",
-//         start_goal.second.getObjectStateRelMap().x(),
-//         start_goal.second.getObjectStateRelMap().y(),
-//         start_goal.second.getObjectStateRelMap().z(),
-//         start_obj_q.w, start_obj_q.x, start_obj_q.y, start_obj_q.z);
-//     fprintf(fout,"      base_xyzyaw: %f %f %f %f\n",
-//         start_goal.second.getContBaseState().x(),
-//         start_goal.second.getContBaseState().y(),
-//         start_goal.second.getContBaseState().z(),
-//         start_goal.second.getContBaseState().theta());
-//     fprintf(fout,"      rarm: %f %f %f %f %f %f %f\n",
-//         start_goal.second.right_arm().getShoulderPanAngle(),
-//         start_goal.second.right_arm().getShoulderLiftAngle(),
-//         start_goal.second.right_arm().getUpperArmRollAngle(),
-//         start_goal.second.right_arm().getElbowFlexAngle(),
-//         start_goal.second.right_arm().getForearmRollAngle(),
-//         start_goal.second.right_arm().getWristFlexAngle(),
-//         start_goal.second.right_arm().getWristRollAngle());
-//     fprintf(fout,"      larm: %f %f %f %f %f %f %f\n",
-//         start_goal.second.left_arm().getShoulderPanAngle(),
-//         start_goal.second.left_arm().getShoulderLiftAngle(),
-//         start_goal.second.left_arm().getUpperArmRollAngle(),
-//         start_goal.second.left_arm().getElbowFlexAngle(),
-//         start_goal.second.left_arm().getForearmRollAngle(),
-//         start_goal.second.left_arm().getWristFlexAngle(),
-//         start_goal.second.left_arm().getWristRollAngle());
-//     fprintf(fout,"\n");
-//     test_num++;
-//   }
-//   fclose(fout);
-//   return true;
-// }
-
-/*! \brief this is callback is purely for simulation purposes
- */
-// bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
-//                                        GetMobileArmPlan::Response &res){
-//     ROS_INFO("running simulations!");
-//     vector<pair<RobotState, RobotState> > start_goal_pairs;
-//     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-//     int number_of_trials = 10;
-//     int counter = 0;
-//     while (counter < number_of_trials){
-//         m_generator->initializeRegions();
-//         m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
-
-//         for (auto& start_goal : start_goal_pairs){
-//             ROS_ERROR("running trial %d", counter);
-//             // start_goal.first.visualize();
-//             SearchRequestParamsPtr search_request = 
-//                 make_shared<SearchRequestParams>();
-//             search_request->initial_epsilon = req.initial_eps;
-//             search_request->final_epsilon = req.final_eps;
-//             search_request->decrement_epsilon = req.dec_eps;
-//             search_request->obj_goal= start_goal.second.getObjectStateRelMap();
-//             search_request->base_start = start_goal.first.base_state();
-//             search_request->base_goal = start_goal.second.base_state();
-//             search_request->left_arm_start = start_goal.first.left_arm();
-//             search_request->right_arm_start = start_goal.first.right_arm();
-//             search_request->left_arm_goal = start_goal.second.left_arm();
-//             search_request->right_arm_goal = start_goal.second.right_arm();
-//             search_request->obj_goal= start_goal.second.getObjectStateRelMap();
-
-//             KDL::Frame rarm_offset, larm_offset;
-//             rarm_offset.p.x(req.rarm_object.pose.position.x);
-//             rarm_offset.p.y(req.rarm_object.pose.position.y);
-//             rarm_offset.p.z(req.rarm_object.pose.position.z);
-//             larm_offset.p.x(req.larm_object.pose.position.x);
-//             larm_offset.p.y(req.larm_object.pose.position.y);
-//             larm_offset.p.z(req.larm_object.pose.position.z);
-
-//             rarm_offset.M = Rotation::Quaternion(
-//                 req.rarm_object.pose.orientation.x, 
-//                 req.rarm_object.pose.orientation.y, 
-//                 req.rarm_object.pose.orientation.z, 
-//                 req.rarm_object.pose.orientation.w);
-//             larm_offset.M = Rotation::Quaternion(
-//                 req.larm_object.pose.orientation.x, 
-//                 req.larm_object.pose.orientation.y, 
-//                 req.larm_object.pose.orientation.z, 
-//                 req.larm_object.pose.orientation.w);
-//             search_request->left_arm_object = larm_offset;
-//             search_request->right_arm_object = rarm_offset;
-//             search_request->xyz_tolerance = req.xyz_tolerance;
-//             search_request->roll_tolerance = req.roll_tolerance;
-//             search_request->pitch_tolerance = req.pitch_tolerance;
-//             search_request->yaw_tolerance = req.yaw_tolerance;
-//             search_request->planning_mode = req.planning_mode;
-
-//             res.stats_field_names.resize(18);
-//             res.stats.resize(18);
-//             int start_id, goal_id;
-//             bool return_first_soln = true;
-//             bool forward_search = true;
-//             clock_t total_planning_time;
-//             bool isPlanFound;
-//             vector<double> stats;
-//             vector<string> stat_names;
-//             vector<FullBodyState> states;
-//             vector<int> soln;
-//             int soln_cost;
-
-//             int environment_seed;
-
-//             m_nodehandle.getParam("/monolithic_pr2_planner_node/experiments/seed",
-//                 environment_seed);
-
-//             if (!m_rrt->checkRequest(*search_request)){
-//                     ROS_WARN("bad start goal for ompl");
-//             } else {
-//                 // Here starts the actual planning requests
-//                 start_goal.first.visualize();
-//                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-//                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-                
-//                 // Write env if the whole thing didn't crash.
-//                 m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
-//                 counter++;
-//             }
-//         }
-//     }
-//     return true;
-// }
-
-bool EnvInterfaces::runMHAPlanner(int planner_type,
-    std::string planner_prefix,
+bool EnvInterfaces::runMHAPlanner(
     GetMobileArmPlan::Request &req,
     GetMobileArmPlan::Response &res,
     SearchRequestParamsPtr search_request,
-    int counter) {
+    int counter,
+    std::vector<FullBodyState>& states) {
     // std::cin.get();
     int start_id, goal_id;
     bool return_first_soln = true;
@@ -287,77 +78,30 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     bool isPlanFound;
     vector<double> stats;
     vector<string> stat_names;
-    vector<FullBodyState> states;
 
-    /*
-    int planner_queues = NUM_SMHA_HEUR;
-    if (planner_type == monolithic_pr2_planner::T_EES)
-        planner_queues = 3;
-    else if (planner_type == monolithic_pr2_planner::T_IMHA)
-        planner_queues = NUM_IMHA_HEUR;
-        */
-
-
-    ros::NodeHandle ph("~");
-    // bool use_new_heuristics;
-    // ph.param("use_new_heuristics",use_new_heuristics,false);
     int planner_queues = 3;
-    // if(!use_new_heuristics)
-    //   planner_queues = 4;
-    // else
-    //   planner_queues = 20;
 
     printf("\n");
     ROS_INFO("Initialize environment");
     m_env->reset();
-    // m_env->setPlannerType(planner_type);
-    // m_env->setUseNewHeuristics(use_new_heuristics);
     m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
     ROS_INFO("configuring request");
     if (!m_env->configureRequest(search_request, start_id, goal_id)){
-        ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
-         planner_prefix.c_str(), counter);
+        ROS_ERROR("Unable to configure request! Trial ID: %d", counter);
 
         total_planning_time = -1;
         int soln_cost = -1;
         packageMHAStats(stat_names, stats, soln_cost, 0, total_planning_time);
         for(unsigned int i=0; i<stats.size(); i++)
           stats[i] = -1;
-        // m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
         res.stats_field_names = stat_names;
         res.stats = stats;
         return true;
     }
 
-    // if(req.use_ompl){
-    //   ROS_INFO("rrt init");
-    //   RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-    //   m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
-    //   ROS_INFO("rrt check request");
-    //   if (!m_rrt->checkRequest(*search_request))
-    //     ROS_WARN("bad start goal for ompl");
-    //   ROS_INFO("rrt plan");
-    //   m_rrt->setPlanningTime(req.allocated_planning_time);
-    //   double t0 = ros::Time::now().toSec();
-    //   bool found_path = m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
-    //   double t1 = ros::Time::now().toSec();
-    //   ROS_INFO("rrt done planning");
-
-    //   res.stats_field_names.clear();
-    //   res.stats_field_names.push_back("total_plan_time");
-    //   res.stats.clear();
-    //   if(found_path)
-    //     res.stats.push_back(t1-t0);
-    //   else
-    //     res.stats.push_back(-1.0);
-
-    //   sleep(5);
-    //   return true;
-    // }
-    // else{
       m_mha_planner->set_start(start_id);
-      ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+      ROS_INFO("setting goal id to %d", goal_id);
       m_mha_planner->set_goal(goal_id);
       m_mha_planner->force_planning_from_scratch();
       vector<int> soln;
@@ -372,18 +116,14 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
       replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>(req.meta_search_type);
       replan_params.planner_type = static_cast<mha_planner::PlannerType>(req.planner_type);
-      //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
-      //                                     &soln, &soln_cost);
       isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
 
       if (isPlanFound) {
-          ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
-              planner_prefix.c_str());
+          ROS_INFO("Plan found. Moving on to reconstruction.");
           states =  m_env->reconstructPath(soln);
           total_planning_time = clock() - total_planning_time;
           packageMHAStats(stat_names, stats, soln_cost, states.size(),
               total_planning_time);
-          // m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
           res.stats_field_names = stat_names;
           res.stats = stats;
       } else {
@@ -391,14 +131,13 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
               total_planning_time);
           res.stats_field_names = stat_names;
           res.stats = stats;
-          ROS_INFO("No plan found in %s!", planner_prefix.c_str());
+          ROS_INFO("No plan found!");
       }
-      if(m_params.run_trajectory) {
-          ROS_INFO("Running trajectory!");
-          runTrajectory(states);
-      }
+      // if(m_params.run_trajectory) {
+      //     ROS_INFO("Running trajectory!");
+      //     runTrajectory(states);
+      // }
       return true;
-    // }
 }
 
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
@@ -443,90 +182,128 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->yaw_tolerance = req.yaw_tolerance;
     search_request->planning_mode = req.planning_mode;
 
+    RobotState start_pose(search_request->base_start, 
+                          search_request->right_arm_start,
+                          search_request->left_arm_start);
+
+    // bins
+    ContObjectState right_bin(1.5, 0.4, 0.6, 0.0, M_PI/2, 0.0);
+    ContObjectState left_bin(1.5, 1.6, 0.6, 0.0, M_PI/2, 0.0);
+    bool right_toward_goal = true;
+    bool left_toward_goal = true;
     // TODO: greedy algorithm
     // set the object goal for each arm.
-    assert(req.goal.size() == 2);
-    // search_request->r_obj_goal= std::make_shared<ContObjectState>(req.goal[0]);
-    search_request->l_obj_goal= std::make_shared<ContObjectState>(req.goal[1]);
-    search_request->r_obj_start = ContObjectState(req.start);
+    assert(req.goal.size());
 
-    res.stats_field_names.resize(18);
-    res.stats.resize(18);
-    int start_id, goal_id;
-    static int counter = 0;
-    bool isPlanFound;
-    
-    double total_planning_time = clock();
-    bool forward_search = true;
-    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    counter++;
+    // initialize the goal list
+    m_goal_list.clear();
+    m_goal_achieved = std::vector<bool>(req.goal.size(), false);
+    for (auto& g : req.goal) {
+        m_goal_list.push_back(ContObjectState(g));
+    }
+
+    int current_right_goal, current_left_goal;
+    // current_right_goal = getClosestGoal(start_pose, true);
+    // current_left_goal = getClosestGoal(start_pose, false, current_right_goal);
+    getClosestGoalAssignment(start_pose, current_right_goal, current_left_goal);
+    while(true) {
+        ROS_INFO("Setting right goal id : %d, left goal id : %d",
+            current_right_goal, current_left_goal);
+        std::cin.get();
+        if (current_right_goal >=0 && current_right_goal < m_goal_list.size()){
+            search_request->r_obj_goal= std::make_shared<ContObjectState>(m_goal_list[current_right_goal]);
+        }
+        if (current_left_goal >=0 && current_left_goal < m_goal_list.size()){
+            search_request->l_obj_goal= std::make_shared<ContObjectState>(m_goal_list[current_left_goal]);
+        }
+        if (!right_toward_goal)
+            search_request->r_obj_goal= std::make_shared<ContObjectState>(right_bin);
+        if (!left_toward_goal)
+            search_request->l_obj_goal= std::make_shared<ContObjectState>(left_bin);
+        res.stats_field_names.resize(18);
+        res.stats.resize(18);
+        int start_id, goal_id;
+        static int counter = 0;
+        bool isPlanFound;
+        double total_planning_time = clock();
+        bool forward_search = true;
+        std::vector<FullBodyState> states;
+        isPlanFound = runMHAPlanner(req, res, search_request, counter, states);
+        counter++;
+        if(!isPlanFound){
+            ROS_ERROR("Holy shit!");
+        }
+
+        // get which one was achieved and mark it as done
+        int goal_side_achieved = m_env->getGoalSideAchieved();
+        if (goal_side_achieved == 1){ // right
+            if (right_toward_goal){  // was an object
+                m_goal_achieved[current_right_goal] = true;
+            }
+            right_toward_goal = !right_toward_goal;
+        }
+        else if (goal_side_achieved == 2){ // left
+            if (left_toward_goal){ // was an object
+                m_goal_achieved[current_left_goal] = true;
+            }
+            left_toward_goal = !left_toward_goal;
+        }
+        else
+            ROS_ERROR("NO GOAL ACHIEVED?!?!?!?!");
+        ROS_INFO("Achieved goal : %s", (goal_side_achieved==1)?"right":"left");
+
+        if(std::all_of(m_goal_achieved.begin(), m_goal_achieved.end(),
+                        [](bool ach){ return ach; })
+            && left_toward_goal && right_toward_goal) {
+            break;
+        }
+
+        RobotState end_pose = PathPostProcessor::createRobotState(states.back());
+        getClosestGoalAssignment(start_pose, current_right_goal, current_left_goal);
+        // release the objects
+        search_request->r_obj_goal.reset();
+        search_request->l_obj_goal.reset();
+        search_request->base_start = end_pose.getContBaseState();
+        search_request->right_arm_start = end_pose.right_arm();
+        search_request->left_arm_start = end_pose.left_arm();
+    }
+    // for underspecified start
+    // search_request->r_obj_start = ContObjectState(req.start);
+
     return true;
 }
 
-// bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req, 
-//                                      GetMobileArmPlan::Response &res)
-// {
+void EnvInterfaces::getClosestGoalAssignment(const
+              monolithic_pr2_planner::RobotState& state,
+              int& current_right_goal, int& current_left_goal)
+{
+    current_right_goal = -1;
+    current_left_goal = -1;
+    // returns the index of the closest *incomplete* goal in the m_goal_list
+    // array
+    ContObjectState r_arm_state = state.getRightObjectStateRelMap();
+    ContObjectState l_arm_state = state.getLeftObjectStateRelMap();
     
-//     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
-//     search_request->initial_epsilon = req.initial_eps;
-//     search_request->final_epsilon = req.final_eps;
-//     search_request->decrement_epsilon = req.dec_eps;
-    
-//     // Get the current state of the robot from the real robot.
-//     BodyPose start_body_pos;
-//     std::vector<double> start_rangles;
-//     std::vector<double> start_langles;
-//     getRobotState(m_tf, start_body_pos, start_rangles, start_langles);
-//     search_request->left_arm_start = LeftContArmState(start_langles);
-//     search_request->right_arm_start = RightContArmState(start_rangles);
-//     ContBaseState start_base_pose(start_body_pos);
-//     search_request->base_start = start_base_pose;
-//     // Underspecified goal
-//     search_request->underspecified_start = req.underspecified_start;
+    double min_dist_r = std::numeric_limits<double>::infinity();
+    double min_dist_l = std::numeric_limits<double>::infinity();
+    for (int i = 0; i < m_goal_list.size(); i++) {
+        if (m_goal_achieved[i] == true)
+            continue;
+        double r_dist_to_goal = ContObjectState::distance(r_arm_state,
+            m_goal_list[i]);
+        double l_dist_to_goal = ContObjectState::distance(l_arm_state,
+            m_goal_list[i]);
+        if (r_dist_to_goal <= l_dist_to_goal && r_dist_to_goal < min_dist_r) {
+            min_dist_r = r_dist_to_goal;
+            current_right_goal = i;
+        } else if (l_dist_to_goal < r_dist_to_goal && l_dist_to_goal <
+            min_dist_l) {
+            min_dist_l = l_dist_to_goal;
+            current_left_goal = i;
+        }
+    }
+}
 
-//     KDL::Frame rarm_offset, larm_offset;
-//     rarm_offset.p.x(req.rarm_object.pose.position.x);
-//     rarm_offset.p.y(req.rarm_object.pose.position.y);
-//     rarm_offset.p.z(req.rarm_object.pose.position.z);
-//     larm_offset.p.x(req.larm_object.pose.position.x);
-//     larm_offset.p.y(req.larm_object.pose.position.y);
-//     larm_offset.p.z(req.larm_object.pose.position.z);
-
-//     rarm_offset.M = Rotation::Quaternion(req.rarm_object.pose.orientation.x, 
-//                                          req.rarm_object.pose.orientation.y, 
-//                                          req.rarm_object.pose.orientation.z, 
-//                                          req.rarm_object.pose.orientation.w);
-//     larm_offset.M = Rotation::Quaternion(req.larm_object.pose.orientation.x, 
-//                                          req.larm_object.pose.orientation.y, 
-//                                          req.larm_object.pose.orientation.z, 
-//                                          req.larm_object.pose.orientation.w);
-//     search_request->left_arm_object = larm_offset;
-//     search_request->right_arm_object = rarm_offset;
-//     search_request->xyz_tolerance = req.xyz_tolerance;
-//     search_request->roll_tolerance = req.roll_tolerance;
-//     search_request->pitch_tolerance = req.pitch_tolerance;
-//     search_request->yaw_tolerance = req.yaw_tolerance;
-//     search_request->planning_mode = req.planning_mode;
-
-//     // relative goal for now.
-//     geometry_msgs::PoseStamped goal_pose = req.goal;
-//     goal_pose.pose.position.x += start_body_pos.x;
-//     goal_pose.pose.position.y += start_body_pos.y;
-
-//     search_request->obj_goal = goal_pose;
-//     search_request->obj_start = req.start;
-
-//     res.stats_field_names.resize(18);
-//     res.stats.resize(18);
-//     int start_id, goal_id;
-//     int counter = 42;
-//     bool isPlanFound;
-
-//     bool forward_search = true;
-//     isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-
-//     return isPlanFound;
-// }
 
 void EnvInterfaces::packageStats(vector<string>& stat_names, 
                                  vector<double>& stats,

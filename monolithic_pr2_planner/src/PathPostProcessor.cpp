@@ -44,13 +44,13 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     }
     
     ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    // vector<FullBodyState> final_path = getFinalPath(soln_path, 
-    //                                                 transition_states,
-    //                                                 goal_state);
+    vector<FullBodyState> final_path = getFinalPath(soln_path, 
+                                                    transition_states,
+                                                    goal_state);
 
     // temptime = clock();
-    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
-        transition_states, goal_state);
+    // std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+    //     transition_states, goal_state);
     // ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
@@ -174,6 +174,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
 }
 
 void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
+    std::cin.get();
     for (auto& state : path){
         vector<double> l_arm, r_arm, base;
         l_arm = state.left_arm;

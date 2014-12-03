@@ -49,6 +49,7 @@ namespace monolithic_pr2_planner {
             void reset();
             void setPlannerType(int planner_type);
             void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+            int getGoalSideAchieved();
 
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
@@ -57,6 +58,7 @@ namespace monolithic_pr2_planner {
             void configurePlanningDomain();
             void configureQuerySpecificParams(SearchRequestPtr search_request);
             void generateStartState(SearchRequestPtr search_request);
+            void applyPolicy(const GraphState& pre_policy_state, GraphStatePtr& successor, bool right_arm = true);
 
             ParameterCatalog m_param_catalog;
             CSpaceMgrPtr m_cspace_mgr;

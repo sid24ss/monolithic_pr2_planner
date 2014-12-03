@@ -18,10 +18,11 @@ int BFS3DHeuristic::getGoalHeuristic(GraphStatePtr state, bool right_arm){
     //     return 0;
     // }
     DiscObjectState obj_state;
-    if (right_arm)
+    if (right_arm) {
         obj_state = state->getRightObjectStateRelMap();
-    else
+    } else {
         obj_state = state->getLeftObjectStateRelMap();
+    }
 
     int cost = m_bfs->getDistance(obj_state.x(), obj_state.y(), obj_state.z());
     // ROS_DEBUG_NAMED(HEUR_LOG, "3D dijkstra's cost to %d %d %d is %d", 

@@ -88,33 +88,25 @@ bool GoalState::withinRPYTol(const GraphStatePtr& graph_state, bool right_arm) {
 }
 
 bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
-    bool right_arm = true;
-    bool r_within_xyz = withinXYZTol(graph_state, right_arm);
-    bool r_within_rpy = withinRPYTol(graph_state, right_arm);
-    
-    right_arm = false;
-    bool l_within_xyz = withinXYZTol(graph_state, right_arm);
-    bool l_within_rpy = withinRPYTol(graph_state, right_arm);
-
-    return (r_within_xyz && r_within_rpy) && (l_within_xyz && l_within_rpy);
+    return (isRightGoalAchieved(graph_state) && isLeftGoalAchieved(graph_state));
 }
 
 bool GoalState::isPartiallySatisfiedBy(const GraphStatePtr& graph_state)
 {
-    bool right_arm = true;
-    bool r_within_xyz = withinXYZTol(graph_state, right_arm);
-    bool r_within_rpy = withinRPYTol(graph_state, right_arm);
-    ROS_DEBUG_NAMED(SEARCH_LOG, "r_within_xyz : %d, r_within_rpy : %d",
-      r_within_xyz, r_within_rpy);
-    
-    right_arm = false;
-    bool l_within_xyz = withinXYZTol(graph_state, right_arm);
-    bool l_within_rpy = withinRPYTol(graph_state, right_arm);
-    ROS_DEBUG_NAMED(SEARCH_LOG, "l_within_xyz : %d, l_within_rpy : %d",
-      l_within_xyz, l_within_rpy);
-    return ((r_within_xyz && r_within_rpy) || (l_within_xyz && l_within_rpy));
+    return (isRightGoalAchieved(graph_state) || isLeftGoalAchieved(graph_state));
 }
 
+bool GoalState::isRightGoalAchieved(const GraphStatePtr& graph_state)
+{
+    bool right_arm = true;
+    return (withinXYZTol(graph_state, right_arm) && withinRPYTol(graph_state, right_arm));
+}
+
+bool GoalState::isLeftGoalAchieved(const GraphStatePtr& graph_state)
+{
+    bool right_arm = false;
+    return (withinXYZTol(graph_state, right_arm) && withinRPYTol(graph_state, right_arm));
+}
 
 bool GoalState::isSolnStateID(int state_id){
     for (auto& goal : m_possible_goals){

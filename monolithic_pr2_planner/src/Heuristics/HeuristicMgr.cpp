@@ -155,11 +155,14 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
     m_goal = goal_state;
 
     // create the right arm and left arm heuristics.
-    if (m_goal.getRightObjectState())
+    if (m_goal.getRightObjectState()){
+        ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting rarm goal");
         m_heuristics[m_heuristic_map["rarm_heur"]]->setGoal(*m_goal.getRightObjectState());
-    if (m_goal.getLeftObjectState())
+    }
+    if (m_goal.getLeftObjectState()) {
+        ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting larm goal");
         m_heuristics[m_heuristic_map["larm_heur"]]->setGoal(*m_goal.getLeftObjectState());
-
+    }
     // NOTE: Change this if we initialize the grids before the planning request
     // for (size_t i = 0; i < m_heuristics.size(); ++i) {
     //     ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting goal for heuristic %d", 

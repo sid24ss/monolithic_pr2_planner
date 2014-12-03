@@ -1,28 +1,29 @@
 #pragma once
-#include <monolithic_pr2_planner/Environment.h>
-#include <monolithic_pr2_planner_node/CollisionSpaceInterface.h>
-#include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
-#include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
-#include <boost/shared_ptr.hpp>
 #include <string>
+#include <boost/shared_ptr.hpp>
 #include <Eigen/Core>
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
+#include <std_srvs/Empty.h>
+
 #include <sbpl/planners/araplanner.h>
 #include <sbpl/planners/mha_planner.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <sbpl/planners/planner.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
-// #include <monolithic_pr2_planner/StatsWriter.h>
-#include <monolithic_pr2_planner/SearchRequest.h>
-#include <monolithic_pr2_planner/PathPostProcessor.h>
-#include <std_srvs/Empty.h>
-
-// #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
-#include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
 
 #include <full_body_controller/ExecutePath.h>
+
+#include <monolithic_pr2_planner/Environment.h>
+#include <monolithic_pr2_planner_node/CollisionSpaceInterface.h>
+#include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
+#include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
+#include <monolithic_pr2_planner/StateReps/ContObjectState.h>
+#include <monolithic_pr2_planner/SearchRequest.h>
+#include <monolithic_pr2_planner/PathPostProcessor.h>
+#include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
+
 
 namespace monolithic_pr2_planner_node {
     struct InterfaceParams {
@@ -66,12 +67,12 @@ namespace monolithic_pr2_planner_node {
                            double new_origin_x, double new_origin_y,
                            double width, double height);
             void interruptPlannerCallback(std_msgs::EmptyConstPtr);
-            bool runMHAPlanner(int planner_type,
-                  std::string planner_prefix,
+            bool runMHAPlanner(
                   GetMobileArmPlan::Request &req,
                   GetMobileArmPlan::Response &res,
                   monolithic_pr2_planner::SearchRequestParamsPtr search_request,
-                  int counter);
+                  int counter,
+                  std::vector<monolithic_pr2_planner::FullBodyState>& states);
             void getRobotState(tf::TransformListener &tf_, BodyPose &body_pos, std::vector<double> &rangles, std::vector<double>
               &langles);
             double getJointAngle(std::string name, sensor_msgs::JointStateConstPtr
@@ -101,6 +102,13 @@ namespace monolithic_pr2_planner_node {
 // to update the costmap of the heurMgr.
             std::unique_ptr<costmap_2d::Costmap2DROS> m_costmap_ros;
             std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
+
+            std::vector<monolithic_pr2_planner::ContObjectState> m_goal_list;
+            std::vector<bool> m_goal_achieved;
+
+            void getClosestGoalAssignment(const
+              monolithic_pr2_planner::RobotState& state,
+              int& current_right_goal, int& current_left_goal);
 
 
             // std::unique_ptr<StartGoalGenerator> m_generator;

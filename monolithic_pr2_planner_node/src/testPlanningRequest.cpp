@@ -64,7 +64,7 @@ int main(int argc, char** argv){
     // body_start[1] = 1.00000;
     // body_start[2] = 0.260000;
     // body_start[3] = 0;          // theta
-    body_start[0] = 1.0;
+    body_start[0] = 1.1;
     body_start[1] = 1.0;
     body_start[2] = 0.260000;
     body_start[3] = 0;          // theta
@@ -113,8 +113,8 @@ int main(int argc, char** argv){
             double qx, qy, qz, qw;
             rot.GetQuaternion(qx, qy, qz, qw);
 
-            goal_pose.pose.position.x = 1.5;
-            goal_pose.pose.position.y = 0.6;
+            goal_pose.pose.position.x = 1.6;
+            goal_pose.pose.position.y = 0.7;
             goal_pose.pose.position.z = 0.7;
             goal_pose.pose.orientation.x = qx;
             goal_pose.pose.orientation.y = qy;
@@ -129,8 +129,24 @@ int main(int argc, char** argv){
             double qx, qy, qz, qw;
             rot.GetQuaternion(qx, qy, qz, qw);
 
-            goal_pose.pose.position.x = 1.5;
-            goal_pose.pose.position.y = 1.4;
+            goal_pose.pose.position.x = 1.65;
+            goal_pose.pose.position.y = 1.3;
+            goal_pose.pose.position.z = 0.7;
+            goal_pose.pose.orientation.x = qx;
+            goal_pose.pose.orientation.y = qy;
+            goal_pose.pose.orientation.z = qz;
+            goal_pose.pose.orientation.w = qw;
+            srv.request.goal.push_back(goal_pose);
+        }
+        {
+            geometry_msgs::PoseStamped goal_pose;
+
+            KDL::Rotation rot = KDL::Rotation::RPY(0,M_PI/2,0);
+            double qx, qy, qz, qw;
+            rot.GetQuaternion(qx, qy, qz, qw);
+
+            goal_pose.pose.position.x = 1.7;
+            goal_pose.pose.position.y = 1.0;
             goal_pose.pose.position.z = 0.7;
             goal_pose.pose.orientation.x = qx;
             goal_pose.pose.orientation.y = qy;
@@ -179,7 +195,7 @@ int main(int argc, char** argv){
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;
 
-    srv.request.allocated_planning_time = 30;
+    srv.request.allocated_planning_time = 60;
 
     srv.request.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
     srv.request.planner_type = mha_planner::PlannerType::SMHA;
