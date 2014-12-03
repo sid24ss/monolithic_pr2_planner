@@ -77,7 +77,8 @@ namespace monolithic_pr2_planner_node {
               &langles);
             double getJointAngle(std::string name, sensor_msgs::JointStateConstPtr
               msg);
-            void runTrajectory(std::vector<monolithic_pr2_planner::FullBodyState>& states);
+            void runTrajectory(std::vector<monolithic_pr2_planner::FullBodyState>& states,
+              bool right_toward_goal, bool left_toward_goal, bool right_goal_achieved );
 
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;
@@ -110,6 +111,8 @@ namespace monolithic_pr2_planner_node {
               monolithic_pr2_planner::RobotState& state,
               int& current_right_goal, int& current_left_goal);
 
+            void addGraspMotion(std::vector<monolithic_pr2_planner::FullBodyState>& states, bool
+              right_arm);
 
             // std::unique_ptr<StartGoalGenerator> m_generator;
             // std::unique_ptr<OMPLPR2Planner> m_rrt;

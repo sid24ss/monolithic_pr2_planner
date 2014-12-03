@@ -32,9 +32,9 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         // RRTSTARFIRSTSOL))
 {
 
-  m_collision_space_interface->mutex = &mutex;
+    m_collision_space_interface->mutex = &mutex;
 
-        getParams();
+    getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
     m_mha_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search));
@@ -133,10 +133,7 @@ bool EnvInterfaces::runMHAPlanner(
           res.stats = stats;
           ROS_INFO("No plan found!");
       }
-      // if(m_params.run_trajectory) {
-      //     ROS_INFO("Running trajectory!");
-      //     runTrajectory(states);
-      // }
+
       return true;
 }
 
@@ -241,16 +238,35 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
                 m_goal_achieved[current_right_goal] = true;
             }
             right_toward_goal = !right_toward_goal;
-        }
-        else if (goal_side_achieved == 2){ // left
+        } else if (goal_side_achieved == 2){ // left
             if (left_toward_goal){ // was an object
                 m_goal_achieved[current_left_goal] = true;
             }
             left_toward_goal = !left_toward_goal;
-        }
-        else
+        } else {
             ROS_ERROR("NO GOAL ACHIEVED?!?!?!?!");
+        }
         ROS_INFO("Achieved goal : %s", (goal_side_achieved==1)?"right":"left");
+
+        // visualize (and execute?)
+        if (goal_side_achieved == 1) {
+            // right arm reached
+            if (!right_toward_goal) {
+                // need to pick up block
+                addGraspMotion(states, true);
+            }
+        } else if (goal_side_achieved == 2){ // left
+            if (!left_toward_goal){ // was an object
+                // need to pick up block
+                addGraspMotion(states, false);
+            }
+        }
+
+        if(m_params.run_trajectory) {
+          ROS_INFO("Running trajectory!");
+          runTrajectory(states, !right_toward_goal, !left_toward_goal,
+            goal_side_achieved == 1);
+        }
 
         if(std::all_of(m_goal_achieved.begin(), m_goal_achieved.end(),
                         [](bool ach){ return ach; })
@@ -304,6 +320,33 @@ void EnvInterfaces::getClosestGoalAssignment(const
     }
 }
 
+void EnvInterfaces::addGraspMotion(std::vector<FullBodyState>& states, bool
+    right_arm)
+{
+    // need to interpolate from here to x cm below
+    double dist_to_move = 0.1;  // meters; 10 cm
+    RobotState last_state = PathPostProcessor::createRobotState(states.back());
+    ContObjectState desired_arm_pose;
+    if (right_arm)
+        desired_arm_pose = last_state.getRightObjectStateRelMap();
+    else
+        desired_arm_pose = last_state.getLeftObjectStateRelMap();
+    desired_arm_pose.z(desired_arm_pose.z() - dist_to_move);
+    RobotState end_state;
+    if (right_arm){
+        end_state = RobotState(last_state.getContBaseState(), desired_arm_pose,
+            last_state.getLeftObjectStateRelMap());
+    } else {
+        end_state = RobotState(last_state.getContBaseState(),
+            last_state.getRightObjectStateRelMap(),
+            desired_arm_pose);
+    }
+    std::vector<RobotState> interp_steps;
+    RobotState::workspaceInterpolate(last_state, end_state, &interp_steps);
+    // add to states
+    for (int i = 1; i < interp_steps.size(); i++)
+        states.push_back(PathPostProcessor::createFBState(interp_steps[i]));
+}
 
 void EnvInterfaces::packageStats(vector<string>& stat_names, 
                                  vector<double>& stats,
@@ -325,21 +368,6 @@ void EnvInterfaces::packageStats(vector<string>& stat_names,
     stat_names[8] = "solution cost";
     stat_names[9] = "path length";
 
-    // TODO fix the total planning time
-    //stats[0] = totalPlanTime;
-    // TODO: Venkat. Handle the inital/final solution eps correctly when this becomes anytime someday.
-    /*
-    stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
-    stats[1] = m_ara_planner->get_initial_eps_planning_time();
-    stats[2] = m_ara_planner->get_initial_eps();
-    stats[3] = m_ara_planner->get_n_expands_init_solution();
-    stats[4] = m_ara_planner->get_final_eps_planning_time();
-    stats[5] = m_ara_planner->get_final_epsilon();
-    stats[6] = m_ara_planner->get_solution_eps();
-    stats[7] = m_ara_planner->get_n_expands();
-    stats[8] = static_cast<double>(solution_cost);
-    stats[9] = static_cast<double>(solution_size);
-    */
     vector<PlannerStats> planner_stats;
     m_mha_planner->get_search_stats(&planner_stats);
     // Take stats only for the first solution, since this is not anytime currently
@@ -359,7 +387,8 @@ void EnvInterfaces::packageMHAStats(vector<string>& stat_names,
                                  vector<double>& stats,
                                  int solution_cost,
                                  size_t solution_size,
-                                 double total_planning_time){
+                                 double total_planning_time)
+{
     stat_names.resize(10);
     stats.resize(10);
     stat_names[0] = "total plan time";
@@ -611,6 +640,8 @@ double EnvInterfaces::getJointAngle(std::string name, sensor_msgs::JointStateCon
   exit(1);
 }
 
+
+
 /**
  * @brief calls the monolithic_trajectory controller
  * @details Converts the FullBodyState objects to a full_body_controller
@@ -620,7 +651,8 @@ double EnvInterfaces::getJointAngle(std::string name, sensor_msgs::JointStateCon
  * @param states The final path
  * @return status of the call
  */
-void EnvInterfaces::runTrajectory(std::vector<FullBodyState>& states) {
+void EnvInterfaces::runTrajectory(std::vector<FullBodyState>& states,
+    bool right_toward_goal, bool left_toward_goal, bool right_goal_achieved) {
 
     // Create the messages from the full body states
     trajectory_msgs::JointTrajectory arms_trajectory;
@@ -685,8 +717,45 @@ void EnvInterfaces::runTrajectory(std::vector<FullBodyState>& states) {
         body_trajectory.points[i].positions.assign(states[i].base.begin(),
             states[i].base.end());
 
-        // Set the gripper poses
-        gripper_trajectory.points[i].positions.resize(2,0);
+        // Set the gripper poses. If it is grasp at end, we know it has to be
+        // ungrasped during the path
+        gripper_trajectory.points[i].positions.resize(2);
+        if (right_toward_goal) {
+            // need to grasp at the end : meaning it's open now
+            gripper_trajectory.points[i].positions[0] = 0.08;
+        } else {
+            gripper_trajectory.points[i].positions[0] = 0.00;
+        }
+        if (left_toward_goal) {
+            gripper_trajectory.points[i].positions[1] = 0.08;
+        } else {
+            gripper_trajectory.points[i].positions[1] = 0.00;
+        }
+
+    }
+    arms_trajectory.points.resize(arms_trajectory.points.size() + 1);
+    body_trajectory.points.resize(body_trajectory.points.size() + 1);
+    gripper_trajectory.points.resize(gripper_trajectory.points.size() + 1);
+    arms_trajectory.points.back() = arms_trajectory.points[arms_trajectory.points.size() - 2];
+    body_trajectory.points.back() = body_trajectory.points[body_trajectory.points.size() - 2];
+    gripper_trajectory.points.back() = body_trajectory.points[body_trajectory.points.size() - 2];
+
+    if (right_goal_achieved){
+        if (right_toward_goal) {
+            // grasp object : close right gripper
+            gripper_trajectory.points.back().positions[0] = 0.0;
+        } else {
+            // release object : open right gripper
+            gripper_trajectory.points.back().positions[0] = 0.08;
+        }
+    } else {
+        if (left_toward_goal) {
+            // grasp object : close left gripper
+            gripper_trajectory.points.back().positions[1] = 0.0;
+        } else {
+            // release object : open left gripper
+            gripper_trajectory.points.back().positions[1] = 0.08;
+        }
     }
 
     // Package into full body message
